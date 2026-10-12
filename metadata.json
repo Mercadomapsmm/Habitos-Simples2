@@ -1,0 +1,6 @@
+{
+  "name": "Hábitos Simples",
+  "description": "Aplicativo gratuito e leve para cuidar de 4 hábitos essenciais: beber água, se exercitar, dormir bem e tomar remédios. 100% offline, fácil e sem cadastro.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

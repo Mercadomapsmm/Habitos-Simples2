@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E0F2FE" />
+      <stop offset="50%" stop-color="#F0FDF4" />
+      <stop offset="100%" stop-color="#FEF3C7" />
+    </linearGradient>
+    <linearGradient id="shield" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0284C7" />
+      <stop offset="100%" stop-color="#0D9488" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#0F172A" flood-opacity="0.12" />
+    </filter>
+  </defs>
+
+  <!-- Background Base with rounded squircle -->
+  <rect x="24" y="24" width="464" height="464" rx="116" fill="url(#bg)" />
+  <rect x="24" y="24" width="464" height="464" rx="116" stroke="#BAE6FD" stroke-width="6" fill="none" />
+
+  <!-- Center Card -->
+  <rect x="76" y="76" width="360" height="360" rx="72" fill="#FFFFFF" filter="url(#shadow)" />
+
+  <!-- 4 Quadrants representing the 4 habits -->
+  
+  <!-- 1. Water (Top Left) -->
+  <g transform="translate(108, 108)">
+    <rect width="132" height="132" rx="28" fill="#E0F2FE" />
+    <!-- Water Drop -->
+    <path d="M66 30 C66 30 42 64 42 82 C42 96 52.7 106 66 106 C79.3 106 90 96 90 82 C90 64 66 30 66 30 Z" fill="#0284C7" />
+    <path d="M56 78 C56 72 61 66 68 64 C65 67 63 71 63 76 C63 80 66 84 66 84 C61 83 56 81 56 78 Z" fill="#BAE6FD" opacity="0.8" />
+  </g>
+
+  <!-- 2. Exercise / Shoes (Top Right) -->
+  <g transform="translate(272, 108)">
+    <rect width="132" height="132" rx="28" fill="#DCFCE7" />
+    <!-- Sneaker / Activity -->
+    <path d="M36 88 C40 88 48 88 56 86 C64 84 76 68 84 68 C92 68 98 72 102 80 C106 88 102 96 92 96 L36 96 C30 96 26 92 26 86 C26 84 28 80 32 76 L48 54 C51 50 56 48 62 48 L76 48" stroke="#16A34A" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+    <circle cx="56" cy="62" r="4" fill="#16A34A" />
+    <circle cx="68" cy="62" r="4" fill="#16A34A" />
+  </g>
+
+  <!-- 3. Sleep / Moon (Bottom Left) -->
+  <g transform="translate(108, 272)">
+    <rect width="132" height="132" rx="28" fill="#EDE9FE" />
+    <!-- Crescent Moon & Stars -->
+    <path d="M72 40 C53 44 40 60 40 80 C40 102 58 120 80 120 C90 120 99 116 106 109 C86 108 72 92 72 72 C72 58 79 47 88 40 C83 39 77 39 72 40 Z" fill="#7C3AED" />
+    <!-- Little star -->
+    <path d="M92 48 L94 54 L100 56 L94 58 L92 64 L90 58 L84 56 L90 54 Z" fill="#FBBF24" />
+  </g>
+
+  <!-- 4. Medicine / Pill (Bottom Right) -->
+  <g transform="translate(272, 272)">
+    <rect width="132" height="132" rx="28" fill="#FEF3C7" />
+    <!-- Pill Capsule tilted -->
+    <g transform="translate(66, 66) rotate(-45)">
+      <rect x="-18" y="-42" width="36" height="42" rx="18" fill="#EF4444" />
+      <rect x="-18" y="0" width="36" height="42" rx="18" fill="#F59E0B" />
+      <line x1="-18" y1="0" x2="18" y2="0" stroke="#FFFFFF" stroke-width="4" />
+      <circle cx="0" cy="-20" r="4" fill="#FFFFFF" opacity="0.6" />
+    </g>
+  </g>
+
+  <!-- Central Badge / Heart Spark -->
+  <circle cx="256" cy="256" r="28" fill="#0284C7" stroke="#FFFFFF" stroke-width="6" />
+  <path d="M256 247 C256 247 246 238 240 244 C234 250 238 259 256 270 C274 259 278 250 272 244 C266 238 256 247 256 247 Z" fill="#FFFFFF" />
+</svg>
