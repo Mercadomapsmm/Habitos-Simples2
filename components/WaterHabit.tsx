@@ -6,18 +6,14 @@ import { sounds, triggerVibration } from '@/lib/sound';
 import confetti from 'canvas-confetti';
 import {
   Droplet,
-  Plus,
   RotateCcw,
   Volume2,
   VolumeX,
   Vibrate,
   Clock,
-  Sparkles,
   Award,
   ChevronDown,
-  Check,
   Calculator,
-  Trash2,
 } from 'lucide-react';
 
 interface WaterHabitProps {
@@ -27,7 +23,6 @@ interface WaterHabitProps {
 
 export function WaterHabit({ waterState, onUpdate }: WaterHabitProps) {
   const [selectedGlassMl, setSelectedGlassMl] = useState<number>(250);
-  const [customMl, setCustomMl] = useState<string>('200');
   const [showConfig, setShowConfig] = useState<boolean>(false);
   const [inputWeight, setInputWeight] = useState<string>(String(waterState.weightKg));
   const [newTime, setNewTime] = useState<string>('09:00');
@@ -120,12 +115,12 @@ export function WaterHabit({ waterState, onUpdate }: WaterHabitProps) {
   return (
     <div className="space-y-6 pb-12 animate-fade-in max-w-xl mx-auto">
       {/* Top Hero: Animated Flask & Metric */}
-      <div className="relative overflow-hidden bg-gradient-to-b from-sky-50 to-white p-6 rounded-3xl border-2 border-sky-100 shadow-sm text-center">
+      <div className="relative overflow-hidden bg-gradient-to-b from-sky-50 to-white dark:from-slate-900 dark:to-slate-900/90 p-6 rounded-3xl border-2 border-sky-100 dark:border-slate-800 shadow-sm text-center transition-colors">
         {/* Soft background glow */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-72 h-36 bg-sky-200/40 rounded-full blur-2xl pointer-events-none" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-72 h-36 bg-sky-200/40 dark:bg-sky-900/20 rounded-full blur-2xl pointer-events-none" />
 
         {/* Visual Water Bottle / Glass Container */}
-        <div className="relative mx-auto w-36 h-52 bg-white/90 rounded-3xl p-2.5 border-4 border-sky-300 shadow-md flex flex-col justify-end overflow-hidden mb-4">
+        <div className="relative mx-auto w-36 h-52 bg-white/90 dark:bg-slate-800/90 rounded-3xl p-2.5 border-4 border-sky-300 dark:border-sky-600 shadow-md flex flex-col justify-end overflow-hidden mb-4">
           {/* Measurement marks */}
           <div className="absolute top-4 right-3 text-[10px] font-bold text-sky-400 select-none">
             100%
@@ -136,7 +131,7 @@ export function WaterHabit({ waterState, onUpdate }: WaterHabitProps) {
           <div className="absolute bottom-4 right-3 text-[10px] font-bold text-sky-400 select-none">
             0%
           </div>
-          <div className="absolute inset-y-0 right-7 w-px border-r border-dashed border-sky-200" />
+          <div className="absolute inset-y-0 right-7 w-px border-r border-dashed border-sky-200 dark:border-sky-700" />
 
           {/* Liquid level */}
           <div
@@ -154,19 +149,19 @@ export function WaterHabit({ waterState, onUpdate }: WaterHabitProps) {
 
         {/* Numbers */}
         <div className="space-y-1">
-          <div className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight flex items-center justify-center gap-1.5">
-            <span className="text-sky-600">
+          <div className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight flex items-center justify-center gap-1.5">
+            <span className="text-sky-600 dark:text-sky-400">
               {waterState.consumedMl.toLocaleString('pt-BR')}
             </span>
             <span className="text-slate-400 text-xl font-bold">/</span>
-            <span className="text-slate-700 text-2xl font-bold">
+            <span className="text-slate-700 dark:text-slate-300 text-2xl font-bold">
               {waterState.dailyGoalMl.toLocaleString('pt-BR')} ml
             </span>
           </div>
 
-          <p className="text-xs font-semibold text-slate-500">
+          <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">
             {isGoalReached
-              ? '🎉 Parabéns! Meta alcançada com sucesso!'
+              ? '🎉 Parabéns! Meta de água alcançada com sucesso!'
               : `Faltam ${Math.max(
                   0,
                   waterState.dailyGoalMl - waterState.consumedMl
@@ -176,16 +171,16 @@ export function WaterHabit({ waterState, onUpdate }: WaterHabitProps) {
 
         {/* Motivational message upon goal completion */}
         {isGoalReached && (
-          <div className="mt-4 p-3 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center justify-center gap-2 text-emerald-800 text-xs sm:text-sm font-bold animate-bounce-subtle">
-            <Award className="w-5 h-5 text-emerald-600 shrink-0" />
+          <div className="mt-4 p-3 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-2xl flex items-center justify-center gap-2 text-emerald-800 dark:text-emerald-300 text-xs sm:text-sm font-bold animate-bounce-subtle">
+            <Award className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
             <span>Seu corpo agradece pela hidratação hoje! Continue assim! 💧🎉</span>
           </div>
         )}
       </div>
 
       {/* Main Action: "Já bebi!" with portion selectors */}
-      <div className="bg-white p-5 rounded-3xl border-2 border-slate-100 shadow-xs space-y-4">
-        <h3 className="text-sm font-bold text-slate-700 flex items-center gap-1.5">
+      <div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border-2 border-slate-100 dark:border-slate-800 shadow-xs space-y-4 transition-colors">
+        <h3 className="text-sm font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
           <Droplet className="w-4 h-4 text-sky-500" />
           Escolha o tamanho do copo:
         </h3>
@@ -199,22 +194,24 @@ export function WaterHabit({ waterState, onUpdate }: WaterHabitProps) {
           ].map((item) => (
             <button
               key={item.ml}
+              type="button"
               onClick={() => setSelectedGlassMl(item.ml)}
               className={`p-3 rounded-2xl border-2 text-center transition active:scale-95 cursor-pointer ${
                 selectedGlassMl === item.ml
-                  ? 'border-sky-500 bg-sky-50/80 text-sky-900 shadow-xs'
-                  : 'border-slate-200 hover:border-slate-300 text-slate-700'
+                  ? 'border-sky-500 bg-sky-50/80 dark:bg-sky-950/60 text-sky-900 dark:text-sky-200 shadow-xs'
+                  : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800'
               }`}
             >
               <div className="text-2xl mb-1">{item.icon}</div>
               <div className="text-sm font-black">{item.ml} ml</div>
-              <div className="text-[11px] text-slate-500 leading-tight">{item.label}</div>
+              <div className="text-[11px] text-slate-500 dark:text-slate-400 leading-tight">{item.label}</div>
             </button>
           ))}
         </div>
 
         {/* Big Action Button "JÁ BEBI!" */}
         <button
+          type="button"
           onClick={() => handleDrink(selectedGlassMl)}
           className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white font-black text-lg shadow-md hover:shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer"
         >
@@ -226,8 +223,9 @@ export function WaterHabit({ waterState, onUpdate }: WaterHabitProps) {
         {waterState.consumedMl > 0 && (
           <div className="flex justify-center pt-1">
             <button
+              type="button"
               onClick={handleUndo}
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 transition cursor-pointer"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition cursor-pointer"
             >
               <RotateCcw className="w-3.5 h-3.5" />
               Desfazer último copo (-{selectedGlassMl} ml)
@@ -237,20 +235,21 @@ export function WaterHabit({ waterState, onUpdate }: WaterHabitProps) {
       </div>
 
       {/* Settings / Weight & Reminders Section */}
-      <div className="bg-white rounded-3xl border border-slate-200 shadow-xs overflow-hidden">
+      <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden transition-colors">
         <button
+          type="button"
           onClick={() => setShowConfig(!showConfig)}
-          className="w-full p-4 flex items-center justify-between text-left hover:bg-slate-50 transition cursor-pointer"
+          className="w-full p-4 flex items-center justify-between text-left hover:bg-slate-50 dark:hover:bg-slate-800/60 transition cursor-pointer"
         >
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-sky-100 flex items-center justify-center text-sky-700 font-bold">
-              <Calculator className="w-5 h-5 text-sky-600" />
+            <div className="w-9 h-9 rounded-xl bg-sky-100 dark:bg-sky-950/60 flex items-center justify-center text-sky-700 dark:text-sky-300 font-bold">
+              <Calculator className="w-5 h-5 text-sky-600 dark:text-sky-400" />
             </div>
             <div>
-              <h4 className="text-sm font-bold text-slate-800">
+              <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">
                 Calcular meta e horários de aviso
               </h4>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-500 dark:text-slate-400">
                 Peso atual: {waterState.weightKg} kg • {waterState.reminderTimes.length} horários
               </p>
             </div>
@@ -263,10 +262,10 @@ export function WaterHabit({ waterState, onUpdate }: WaterHabitProps) {
         </button>
 
         {showConfig && (
-          <div className="p-5 pt-2 border-t border-slate-100 space-y-5">
+          <div className="p-5 pt-2 border-t border-slate-100 dark:border-slate-800 space-y-5">
             {/* Weight to water calculator */}
             <form onSubmit={handleSaveWeight} className="space-y-2">
-              <label className="block text-xs font-bold text-slate-700">
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
                 Seu peso corporal (kg) para calcular a meta:
               </label>
               <div className="flex gap-2">
@@ -276,7 +275,7 @@ export function WaterHabit({ waterState, onUpdate }: WaterHabitProps) {
                   max="250"
                   value={inputWeight}
                   onChange={(e) => setInputWeight(e.target.value)}
-                  className="w-full px-3.5 py-2 rounded-xl border border-slate-300 font-bold text-slate-800 focus:outline-sky-500"
+                  className="w-full px-3.5 py-2 rounded-xl border border-slate-300 dark:border-slate-700 font-bold text-slate-800 dark:text-white bg-white dark:bg-slate-800 focus:outline-sky-500"
                   placeholder="Ex: 70"
                 />
                 <button
@@ -286,21 +285,22 @@ export function WaterHabit({ waterState, onUpdate }: WaterHabitProps) {
                   Recalcular
                 </button>
               </div>
-              <p className="text-[11px] text-slate-500">
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
                 💡 Padrão recomendado: 35 ml por kg de peso corporal ({inputWeight ? Math.round(Number(inputWeight) * 35) : 2450} ml/dia).
               </p>
             </form>
 
             {/* Reminder Times */}
-            <div className="space-y-3 pt-3 border-t border-slate-100">
+            <div className="space-y-3 pt-3 border-t border-slate-100 dark:border-slate-800">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                  <Clock className="w-4 h-4 text-sky-600" />
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                  <Clock className="w-4 h-4 text-sky-600 dark:text-sky-400" />
                   Horários dos lembretes ({waterState.reminderTimes.length}):
                 </label>
                 <button
+                  type="button"
                   onClick={handleGenerateDefaultTimes}
-                  className="text-[11px] font-bold text-sky-600 hover:underline cursor-pointer"
+                  className="text-[11px] font-bold text-sky-600 dark:text-sky-400 hover:underline cursor-pointer"
                 >
                   Usar sugestão padrão
                 </button>
@@ -311,10 +311,11 @@ export function WaterHabit({ waterState, onUpdate }: WaterHabitProps) {
                 {waterState.reminderTimes.map((t) => (
                   <span
                     key={t}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-sky-50 border border-sky-200 text-sky-800 rounded-xl text-xs font-bold"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-sky-50 dark:bg-sky-950/60 border border-sky-200 dark:border-sky-800 text-sky-800 dark:text-sky-200 rounded-xl text-xs font-bold"
                   >
                     {t}
                     <button
+                      type="button"
                       onClick={() => handleRemoveTime(t)}
                       className="text-sky-400 hover:text-red-500 transition cursor-pointer"
                       title="Remover horário"
@@ -331,12 +332,12 @@ export function WaterHabit({ waterState, onUpdate }: WaterHabitProps) {
                   type="time"
                   value={newTime}
                   onChange={(e) => setNewTime(e.target.value)}
-                  className="px-3 py-1.5 border border-slate-300 rounded-xl text-xs font-bold text-slate-700"
+                  className="px-3 py-1.5 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800"
                 />
                 <button
                   type="button"
                   onClick={handleAddTime}
-                  className="px-3 py-1.5 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-xl transition cursor-pointer"
+                  className="px-3 py-1.5 bg-slate-800 dark:bg-slate-700 hover:bg-slate-900 text-white text-xs font-bold rounded-xl transition cursor-pointer"
                 >
                   + Adicionar horário
                 </button>
@@ -344,12 +345,13 @@ export function WaterHabit({ waterState, onUpdate }: WaterHabitProps) {
             </div>
 
             {/* Sound & Vibration toggles */}
-            <div className="space-y-2 pt-3 border-t border-slate-100">
-              <div className="text-xs font-bold text-slate-700 mb-1">
+            <div className="space-y-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+              <div className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                 Avisos sonoros e vibração:
               </div>
               <div className="flex flex-wrap gap-3">
                 <button
+                  type="button"
                   onClick={() =>
                     onUpdate((prev) => ({
                       ...prev,
@@ -358,8 +360,8 @@ export function WaterHabit({ waterState, onUpdate }: WaterHabitProps) {
                   }
                   className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-bold cursor-pointer transition ${
                     waterState.soundEnabled
-                      ? 'bg-emerald-50 border-emerald-300 text-emerald-800'
-                      : 'bg-slate-50 border-slate-200 text-slate-500'
+                      ? 'bg-emerald-50 dark:bg-emerald-950/50 border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300'
+                      : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400'
                   }`}
                 >
                   {waterState.soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
@@ -367,6 +369,7 @@ export function WaterHabit({ waterState, onUpdate }: WaterHabitProps) {
                 </button>
 
                 <button
+                  type="button"
                   onClick={() =>
                     onUpdate((prev) => ({
                       ...prev,
@@ -375,8 +378,8 @@ export function WaterHabit({ waterState, onUpdate }: WaterHabitProps) {
                   }
                   className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-bold cursor-pointer transition ${
                     waterState.vibrationEnabled
-                      ? 'bg-emerald-50 border-emerald-300 text-emerald-800'
-                      : 'bg-slate-50 border-slate-200 text-slate-500'
+                      ? 'bg-emerald-50 dark:bg-emerald-950/50 border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300'
+                      : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400'
                   }`}
                 >
                   <Vibrate className="w-4 h-4" />
@@ -384,8 +387,9 @@ export function WaterHabit({ waterState, onUpdate }: WaterHabitProps) {
                 </button>
 
                 <button
+                  type="button"
                   onClick={handleTestSound}
-                  className="px-3 py-2 rounded-xl border border-sky-200 bg-sky-50 text-sky-700 text-xs font-bold hover:bg-sky-100 transition cursor-pointer"
+                  className="px-3 py-2 rounded-xl border border-sky-200 dark:border-sky-800 bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 text-xs font-bold hover:bg-sky-100 dark:hover:bg-sky-900 transition cursor-pointer"
                 >
                   Testar som 🔔
                 </button>

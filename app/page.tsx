@@ -49,6 +49,15 @@ export default function Page() {
     };
   }, []);
 
+  // Synchronize document dark class and color-scheme for Branco and Dark modes
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      const isDark = data?.settings?.theme === 'dark';
+      document.documentElement.classList.toggle('dark', isDark);
+      document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
+    }
+  }, [data?.settings?.theme]);
+
   // Specific state updaters
   const updateWater = (updater: (prev: WaterState) => WaterState) => {
     updateData((prev) => ({ ...prev, water: updater(prev.water) }));
@@ -108,9 +117,19 @@ export default function Page() {
       if (alreadyDone) {
         newHistory = prev.history.filter((h) => h.date !== todayStr);
       } else {
+        const todayDay = new Date().getDay();
+        const activeToday = prev.activities?.find(
+          (a) => a.enabled && a.selectedDays.includes(todayDay)
+        );
         newHistory = [
           ...prev.history.filter((h) => h.date !== todayStr),
-          { date: todayStr, completed: true, type: prev.type },
+          {
+            date: todayStr,
+            completed: true,
+            type: activeToday?.type || prev.type || 'caminhada',
+            activityId: activeToday?.id,
+            emoji: activeToday?.icon || '💪',
+          },
         ];
       }
 
@@ -124,6 +143,26 @@ export default function Page() {
         lastCompletedDate: isTodayDone ? todayStr : null,
         streakDays: newStreak,
         history: newHistory,
+      };
+    });
+  };
+
+  // Update varied emoji for any day from home screen or tracker
+  const handleUpdateDailyEmoji = (date: string, emoji: string | null) => {
+    updateData((prev) => {
+      const current = { ...(prev.dailyEmojis || {}) };
+      if (!emoji) {
+        delete current[date];
+      } else {
+        current[date] = emoji;
+      }
+      return {
+        ...prev,
+        dailyEmojis: current,
+        settings: {
+          ...prev.settings,
+          dailyEmojis: current,
+        },
       };
     });
   };
@@ -236,6 +275,7 @@ export default function Page() {
                 onSelectTab={setCurrentTab}
                 onQuickDrinkWater={handleQuickDrinkWater}
                 onQuickToggleExercise={handleQuickToggleExercise}
+                onUpdateDailyEmoji={handleUpdateDailyEmoji}
               />
             )}
 

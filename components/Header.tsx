@@ -123,29 +123,44 @@ export function Header({
             </button>
           )}
 
-          {/* Theme Toggle Button (Branco / Dark) */}
-          <button
-            onClick={onToggleTheme}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border transition active:scale-95 cursor-pointer ${
-              theme === 'dark'
-                ? 'bg-slate-800 border-slate-700 text-amber-300 hover:bg-slate-750'
-                : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
-            }`}
-            title={theme === 'dark' ? 'Mudar para modo Branco' : 'Mudar para modo Dark'}
-            aria-label="Alternar entre modo Branco e Dark"
+          {/* Duas opções para a cor da tela: Branco e Dark */}
+          <div
+            className="flex items-center p-0.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200/90 dark:border-slate-700 shadow-2xs"
+            role="group"
+            aria-label="Opções para a cor da tela: Branco e Dark"
           >
-            {theme === 'dark' ? (
-              <>
-                <Sun className="w-4 h-4 text-amber-400" />
-                <span className="text-[11px] font-bold hidden sm:inline">Branco</span>
-              </>
-            ) : (
-              <>
-                <Moon className="w-4 h-4 text-indigo-600" />
-                <span className="text-[11px] font-bold hidden sm:inline">Dark</span>
-              </>
-            )}
-          </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (theme !== 'light') onToggleTheme();
+              }}
+              className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                theme === 'light'
+                  ? 'bg-white text-slate-900 shadow-xs ring-1 ring-slate-200'
+                  : 'text-slate-500 hover:text-slate-300'
+              }`}
+              title="Tela na cor Branca (Clara)"
+            >
+              <Sun className={`w-3.5 h-3.5 ${theme === 'light' ? 'text-amber-500' : 'text-slate-400'}`} />
+              <span>Branco</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                if (theme !== 'dark') onToggleTheme();
+              }}
+              className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                theme === 'dark'
+                  ? 'bg-slate-700 text-amber-300 shadow-xs ring-1 ring-slate-600'
+                  : 'text-slate-500 hover:text-slate-700'
+              }`}
+              title="Tela na cor Dark (Noturna)"
+            >
+              <Moon className={`w-3.5 h-3.5 ${theme === 'dark' ? 'text-amber-300' : 'text-slate-400'}`} />
+              <span>Dark</span>
+            </button>
+          </div>
 
           {/* Notification Button */}
           <button

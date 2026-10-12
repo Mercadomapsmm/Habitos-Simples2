@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react';
-import { AppData, WaterState, ExerciseState, SleepState, MedicineState } from './types';
+import { AppData, WaterState, ExerciseState, SleepState, MedicineState, ExerciseActivity } from './types';
 
 const STORAGE_KEY = 'habitos_simples_v1';
 
@@ -22,6 +22,49 @@ export function getDayNameBR(dayIndex: number): string {
   const names = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
   return names[dayIndex] || '';
 }
+
+export const defaultActivities: ExerciseActivity[] = [
+  {
+    id: 'act-caminhada',
+    name: 'Caminhada',
+    type: 'caminhada',
+    icon: '🚶‍♂️',
+    selectedDays: [1, 3, 5], // Seg, Qua, Sex
+    reminderTime: '07:00',
+    durationMinutes: 30,
+    enabled: true,
+  },
+  {
+    id: 'act-alongamento',
+    name: 'Alongamento',
+    type: 'alongamento',
+    icon: '🧘‍♀️',
+    selectedDays: [0, 1, 2, 3, 4, 5, 6], // Todos os dias
+    reminderTime: '08:00',
+    durationMinutes: 15,
+    enabled: true,
+  },
+  {
+    id: 'act-academia',
+    name: 'Academia / Treino',
+    type: 'academia',
+    icon: '🏋️‍♂️',
+    selectedDays: [2, 4], // Ter, Qui
+    reminderTime: '18:00',
+    durationMinutes: 45,
+    enabled: true,
+  },
+  {
+    id: 'act-corrida',
+    name: 'Corrida',
+    type: 'corrida',
+    icon: '🏃‍♂️',
+    selectedDays: [6, 0], // Sáb, Dom
+    reminderTime: '07:30',
+    durationMinutes: 30,
+    enabled: false,
+  },
+];
 
 export function calculateStreak(
   history: { date: string; completed: boolean }[],
@@ -71,13 +114,14 @@ export const defaultInitialData: AppData = {
   exercise: {
     type: 'caminhada',
     customTypeName: '',
-    selectedDays: [1, 2, 3, 4, 5], // Seg a Sex
-    reminderTime: '17:30',
+    selectedDays: [1, 3, 5],
+    reminderTime: '07:00',
     durationMinutes: 30,
     streakDays: 0,
     lastCompletedDate: null,
     soundEnabled: true,
     history: [],
+    activities: defaultActivities,
   },
   sleep: {
     targetBedTime: '22:30',
@@ -115,7 +159,9 @@ export const defaultInitialData: AppData = {
     userName: '',
     notificationsAllowed: false,
     theme: 'light',
+    dailyEmojis: {},
   },
+  dailyEmojis: {},
 };
 
 let cachedData: AppData = defaultInitialData;
@@ -189,6 +235,15 @@ export function loadAppData(): AppData {
     } else if (!data.settings.theme) {
       data.settings.theme = 'light';
       hadMocks = true;
+    }
+
+    if (!data.exercise.activities || data.exercise.activities.length === 0) {
+      data.exercise.activities = defaultActivities;
+      hadMocks = true;
+    }
+
+    if (!data.dailyEmojis) {
+      data.dailyEmojis = data.settings?.dailyEmojis || {};
     }
 
     if (hadMocks) {

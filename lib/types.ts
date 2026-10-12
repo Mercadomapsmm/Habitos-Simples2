@@ -13,6 +13,17 @@ export interface WaterState {
 
 export type ExerciseType = 'caminhada' | 'alongamento' | 'academia' | 'corrida' | 'ciclismo' | 'outro';
 
+export interface ExerciseActivity {
+  id: string;
+  name: string;
+  type: ExerciseType;
+  icon: string;
+  selectedDays: number[]; // 0 = Domingo, 1 = Segunda, ... 6 = Sábado
+  reminderTime: string; // '07:30'
+  durationMinutes: number;
+  enabled: boolean;
+}
+
 export interface ExerciseState {
   type: ExerciseType;
   customTypeName?: string;
@@ -21,8 +32,15 @@ export interface ExerciseState {
   durationMinutes: number;
   streakDays: number;
   lastCompletedDate: string | null; // 'YYYY-MM-DD'
-  history: { date: string; completed: boolean; type: string }[];
+  history: {
+    date: string;
+    completed: boolean;
+    type: string;
+    activityId?: string;
+    emoji?: string;
+  }[];
   soundEnabled: boolean;
+  activities: ExerciseActivity[];
 }
 
 export type SleepRating = 'otimo' | 'bom' | 'regular' | 'ruim';
@@ -32,6 +50,7 @@ export interface SleepEntry {
   sleepTime: string; // '22:30'
   wakeTime: string; // '06:30'
   rating?: SleepRating;
+  emoji?: string;
   note?: string;
 }
 
@@ -67,6 +86,7 @@ export interface AppSettings {
   userName?: string;
   notificationsAllowed: boolean;
   theme?: 'light' | 'dark';
+  dailyEmojis?: Record<string, string>; // date (YYYY-MM-DD) -> emoji
 }
 
 export interface AppData {
@@ -75,4 +95,5 @@ export interface AppData {
   sleep: SleepState;
   medicine: MedicineState;
   settings: AppSettings;
+  dailyEmojis?: Record<string, string>;
 }

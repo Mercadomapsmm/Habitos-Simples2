@@ -80,15 +80,32 @@ export function checkActiveAlerts(data: AppData, todayStr: string): ActiveAlert[
     });
   }
 
-  // 2. Exercise
-  if (
+  // 2. Exercise (checks separate agenda for each activity)
+  if (data.exercise.activities && data.exercise.activities.length > 0) {
+    for (const act of data.exercise.activities) {
+      if (
+        act.enabled &&
+        act.selectedDays.includes(currentDayOfWeek) &&
+        act.reminderTime === currentTime
+      ) {
+        alerts.push({
+          id: `exercise-${act.id}-${currentTime}`,
+          type: 'exercise',
+          title: `🏃 Hora de se mexer: ${act.name}!`,
+          message: `Momento do seu ${act.name} (${act.durationMinutes} min). Vai fazer muito bem! 💪`,
+          time: currentTime,
+        });
+      }
+    }
+  } else if (
     data.exercise.selectedDays.includes(currentDayOfWeek) &&
     data.exercise.reminderTime === currentTime &&
     data.exercise.lastCompletedDate !== todayStr
   ) {
-    const typeLabel = data.exercise.type === 'outro' && data.exercise.customTypeName 
-      ? data.exercise.customTypeName 
-      : data.exercise.type;
+    const typeLabel =
+      data.exercise.type === 'outro' && data.exercise.customTypeName
+        ? data.exercise.customTypeName
+        : data.exercise.type;
     alerts.push({
       id: `exercise-${currentTime}`,
       type: 'exercise',
