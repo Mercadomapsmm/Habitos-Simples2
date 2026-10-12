@@ -18,6 +18,7 @@ import {
   Info,
   X,
   Save,
+  Check,
 } from 'lucide-react';
 
 interface MedicineHabitProps {
@@ -369,14 +370,19 @@ export function MedicineHabit({
 
       {/* 7-Day History Track */}
       <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-xs space-y-3">
-        <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
-          <Calendar className="w-4 h-4 text-amber-600" />
-          Histórico dos últimos 7 dias:
-        </h4>
+        <div className="flex items-center justify-between">
+          <h4 className="text-xs sm:text-sm font-black text-amber-900 tracking-wide flex items-center gap-1.5 uppercase">
+            <Calendar className="w-4 h-4 text-amber-600" />
+            Histórico dos últimos 7 dias:
+          </h4>
+          <span className="text-[11px] font-semibold text-slate-400">
+            Toque para marcar / desmarcar
+          </span>
+        </div>
 
-        <div className="grid grid-cols-7 gap-1.5 text-center">
+        <div className="grid grid-cols-7 gap-1 sm:gap-2 text-center">
           {recent7.map((d) => {
-            // Check how many medicines taken on that day
+            // Check if all medicines are taken on that day
             let totalDoses = 0;
             let takenCount = 0;
             medicineState.medicines.forEach((m) => {
@@ -389,28 +395,77 @@ export function MedicineHabit({
               });
             });
 
-            const allDone = totalDoses > 0 && takenCount >= totalDoses;
-            const partiallyDone = takenCount > 0 && !allDone;
+            const isCompleted = totalDoses > 0 ? takenCount >= totalDoses : false;
 
             return (
-              <div
+              <button
                 key={d.dateStr}
-                className={`p-2 rounded-2xl border transition ${
-                  allDone
-                    ? 'bg-emerald-50 border-emerald-300 text-emerald-900'
-                    : partiallyDone
-                    ? 'bg-amber-50 border-amber-300 text-amber-900'
-                    : 'bg-slate-50 border-slate-200 text-slate-400'
-                } ${d.isToday ? 'ring-2 ring-amber-500' : ''}`}
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onUpdate((prev) => {
+                    const anyTaken = prev.medicines.some((m) =>
+                      m.history.some((h) => h.date === d.dateStr)
+                    );
+
+                    if (anyTaken) {
+                      // Unmark this day
+                      return {
+                        ...prev,
+                        medicines: prev.medicines.map((m) => ({
+                          ...m,
+                          history: m.history.filter((h) => h.date !== d.dateStr),
+                        })),
+                      };
+                    } else {
+                      // Mark all doses for this day
+                      return {
+                        ...prev,
+                        medicines: prev.medicines.map((m) => {
+                          const otherHistory = m.history.filter((h) => h.date !== d.dateStr);
+                          const dayLogs = m.times.map((t) => ({
+                            date: d.dateStr,
+                            time: t,
+                            takenAt: t,
+                          }));
+                          return {
+                            ...m,
+                            history: [...otherHistory, ...dayLogs],
+                          };
+                        }),
+                      };
+                    }
+                  });
+                }}
+                className={`p-2 sm:p-2.5 rounded-2xl border transition-all cursor-pointer active:scale-95 flex flex-col items-center justify-between min-h-[82px] select-none ${
+                  isCompleted
+                    ? 'bg-emerald-50/90 border-2 border-emerald-400 text-emerald-950 shadow-2xs'
+                    : 'bg-slate-50/70 hover:bg-slate-100/90 border border-slate-200 text-slate-600'
+                } ${d.isToday ? 'ring-2 ring-amber-500 border-2 border-amber-500' : ''}`}
+                title={`Clique para ${isCompleted ? 'desmarcar' : 'marcar'} ${d.dayName} (${d.dateStr})`}
               >
-                <div className="text-[10px] font-bold text-slate-400">{d.dayName}</div>
-                <div className="text-lg my-1 select-none">
-                  {allDone ? '💊✅' : partiallyDone ? '💊⏳' : '⚪'}
+                <span className="text-[11px] font-bold text-slate-400">
+                  {d.dayName}
+                </span>
+
+                <div className="my-1.5">
+                  {isCompleted ? (
+                    <div className="flex items-center justify-center gap-1">
+                      <span className="text-base select-none">💊</span>
+                      <div className="w-5 h-5 rounded-md bg-emerald-500 border-2 border-emerald-600 flex items-center justify-center text-white shadow-xs">
+                        <Check className="w-3.5 h-3.5 stroke-[3]" />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="w-6 h-6 sm:w-7 sm:h-7 mx-auto rounded-full border-2 border-slate-400/80 bg-white" />
+                  )}
                 </div>
-                <div className="text-[10px] font-semibold">
+
+                <span className="text-[11px] font-bold text-slate-700">
                   {d.isToday ? 'Hoje' : d.dateStr.slice(8, 10)}
-                </div>
-              </div>
+                </span>
+              </button>
             );
           })}
         </div>

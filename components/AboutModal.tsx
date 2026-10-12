@@ -29,9 +29,10 @@ interface AboutModalProps {
   appData: AppData;
   onRestoreData: (data: AppData) => void;
   onClose: () => void;
+  onSetTheme?: (theme: 'light' | 'dark') => void;
 }
 
-export function AboutModal({ appData, onRestoreData, onClose }: AboutModalProps) {
+export function AboutModal({ appData, onRestoreData, onClose, onSetTheme }: AboutModalProps) {
   const { isInstallable, install, isIOS } = usePWAInstall();
 
   const [rating, setRating] = useState<number>(5);
@@ -97,14 +98,53 @@ export function AboutModal({ appData, onRestoreData, onClose }: AboutModalProps)
         </p>
       </div>
 
+      {/* Theme Selection: Branco vs Dark */}
+      <div className="p-4 rounded-3xl bg-white dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800 shadow-xs space-y-2.5">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+            🎨 Cor da Tela (Tema):
+          </span>
+          <span className="text-xs font-bold text-sky-600 dark:text-sky-400">
+            {appData.settings?.theme === 'dark' ? 'Modo Dark Ativo 🌙' : 'Modo Branco Ativo ☀️'}
+          </span>
+        </div>
+        <div className="grid grid-cols-2 gap-2.5">
+          <button
+            type="button"
+            onClick={() => onSetTheme?.('light')}
+            className={`p-3 rounded-2xl border-2 flex items-center justify-center gap-2 font-bold text-xs transition cursor-pointer ${
+              appData.settings?.theme !== 'dark'
+                ? 'bg-sky-50 dark:bg-sky-950/60 border-sky-500 text-sky-900 dark:text-sky-200 shadow-xs'
+                : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100'
+            }`}
+          >
+            <span className="text-base">☀️</span>
+            <span>Tela Branca (Clara)</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => onSetTheme?.('dark')}
+            className={`p-3 rounded-2xl border-2 flex items-center justify-center gap-2 font-bold text-xs transition cursor-pointer ${
+              appData.settings?.theme === 'dark'
+                ? 'bg-slate-800 border-sky-400 text-white shadow-xs'
+                : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100'
+            }`}
+          >
+            <span className="text-base">🌙</span>
+            <span>Tela Dark (Escura)</span>
+          </button>
+        </div>
+      </div>
+
       {/* Tabs */}
-      <div className="flex p-1 bg-slate-100 rounded-2xl text-xs font-bold text-slate-600">
+      <div className="flex p-1 bg-slate-100 dark:bg-slate-800 rounded-2xl text-xs font-bold text-slate-600 dark:text-slate-300">
         <button
           onClick={() => setActiveTab('instalar')}
           className={`flex-1 py-2.5 rounded-xl transition cursor-pointer ${
             activeTab === 'instalar'
-              ? 'bg-white text-slate-900 shadow-xs'
-              : 'hover:text-slate-900'
+              ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs'
+              : 'hover:text-slate-900 dark:hover:text-white'
           }`}
         >
           📱 Instalar no Celular

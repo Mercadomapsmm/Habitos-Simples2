@@ -330,41 +330,75 @@ export function SleepHabit({ sleepState, onUpdate }: SleepHabitProps) {
 
       {/* 7-Day Visual Graph */}
       <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-xs space-y-3">
-        <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
-          <Clock className="w-4 h-4 text-indigo-600" />
-          Gráfico simples dos últimos 7 dias:
-        </h4>
+        <div className="flex items-center justify-between">
+          <h4 className="text-xs sm:text-sm font-black text-indigo-900 tracking-wide flex items-center gap-1.5 uppercase">
+            <Clock className="w-4 h-4 text-indigo-600" />
+            Gráfico simples dos últimos 7 dias:
+          </h4>
+          <span className="text-[11px] font-semibold text-slate-400">
+            Toque para marcar / desmarcar
+          </span>
+        </div>
 
-        <div className="grid grid-cols-7 gap-1.5 text-center">
+        <div className="grid grid-cols-7 gap-1 sm:gap-2 text-center">
           {recent7.map((item) => {
-            let emoji = '⚪';
-            let barBg = 'bg-slate-100';
-            if (item.rating === 'otimo' || item.rating === 'bom') {
-              emoji = '😊';
-              barBg = 'bg-emerald-100 border-emerald-300 text-emerald-900';
-            } else if (item.rating === 'regular') {
-              emoji = '😐';
-              barBg = 'bg-amber-100 border-amber-300 text-amber-900';
-            } else if (item.rating === 'ruim') {
-              emoji = '🥱';
-              barBg = 'bg-rose-100 border-rose-300 text-rose-900';
-            }
+            const isCompleted = !!item.rating;
 
             return (
-              <div
+              <button
                 key={item.dateStr}
-                className={`p-2 rounded-2xl border transition ${barBg} ${
-                  item.isToday ? 'ring-2 ring-indigo-500' : ''
-                }`}
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onUpdate((prev) => {
+                    const exists = prev.history.some((h) => h.date === item.dateStr);
+                    if (exists) {
+                      return {
+                        ...prev,
+                        history: prev.history.filter((h) => h.date !== item.dateStr),
+                      };
+                    } else {
+                      return {
+                        ...prev,
+                        history: [
+                          ...prev.history.filter((h) => h.date !== item.dateStr),
+                          {
+                            date: item.dateStr,
+                            sleepTime: prev.targetBedTime,
+                            wakeTime: prev.targetWakeTime,
+                            rating: 'bom',
+                          },
+                        ],
+                      };
+                    }
+                  });
+                }}
+                className={`p-2 sm:p-2.5 rounded-2xl border transition-all cursor-pointer active:scale-95 flex flex-col items-center justify-between min-h-[82px] select-none ${
+                  isCompleted
+                    ? 'bg-emerald-50/90 border-2 border-emerald-400 text-emerald-950 shadow-2xs'
+                    : 'bg-slate-50/70 hover:bg-slate-100/90 border border-slate-200 text-slate-600'
+                } ${item.isToday ? 'ring-2 ring-indigo-500 border-2 border-indigo-500' : ''}`}
+                title={`Clique para ${isCompleted ? 'desmarcar' : 'marcar'} ${item.dayName} (${item.dateStr})`}
               >
-                <div className="text-[10px] font-bold text-slate-500">
+                <span className="text-[11px] font-bold text-slate-400">
                   {item.dayName}
+                </span>
+
+                <div className="my-1.5">
+                  {isCompleted ? (
+                    <div className="w-7 h-7 mx-auto rounded-full bg-emerald-100 border border-emerald-300 flex items-center justify-center text-lg select-none">
+                      😊
+                    </div>
+                  ) : (
+                    <div className="w-6 h-6 sm:w-7 sm:h-7 mx-auto rounded-full border-2 border-slate-400/80 bg-white" />
+                  )}
                 </div>
-                <div className="text-xl my-1 select-none">{emoji}</div>
-                <div className="text-[10px] font-semibold">
+
+                <span className="text-[11px] font-bold text-slate-700">
                   {item.isToday ? 'Hoje' : item.dateStr.slice(8, 10)}
-                </div>
-              </div>
+                </span>
+              </button>
             );
           })}
         </div>

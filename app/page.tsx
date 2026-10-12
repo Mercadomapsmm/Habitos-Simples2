@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { HabitTab, WaterState, ExerciseState, SleepState, MedicineState } from '@/lib/types';
-import { useAppData, getTodayString } from '@/lib/storage';
+import { useAppData, getTodayString, calculateStreak } from '@/lib/storage';
 import {
   checkActiveAlerts,
   ActiveAlert,
@@ -100,25 +100,31 @@ export default function Page() {
   const handleQuickToggleExercise = () => {
     const todayStr = getTodayString();
     updateExercise((prev) => {
-      const alreadyDone = prev.lastCompletedDate === todayStr;
+      const alreadyDone =
+        prev.lastCompletedDate === todayStr ||
+        prev.history.some((h) => h.date === todayStr && h.completed);
+
+      let newHistory;
       if (alreadyDone) {
-        return {
-          ...prev,
-          lastCompletedDate: null,
-          streakDays: Math.max(0, prev.streakDays - 1),
-          history: prev.history.filter((h) => h.date !== todayStr),
-        };
+        newHistory = prev.history.filter((h) => h.date !== todayStr);
       } else {
-        return {
-          ...prev,
-          lastCompletedDate: todayStr,
-          streakDays: prev.streakDays + 1,
-          history: [
-            ...prev.history.filter((h) => h.date !== todayStr),
-            { date: todayStr, completed: true, type: prev.type },
-          ],
-        };
+        newHistory = [
+          ...prev.history.filter((h) => h.date !== todayStr),
+          { date: todayStr, completed: true, type: prev.type },
+        ];
       }
+
+      const isTodayDone = newHistory.some(
+        (h) => h.date === todayStr && h.completed
+      );
+      const newStreak = calculateStreak(newHistory, todayStr);
+
+      return {
+        ...prev,
+        lastCompletedDate: isTodayDone ? todayStr : null,
+        streakDays: newStreak,
+        history: newHistory,
+      };
     });
   };
 
@@ -169,14 +175,34 @@ export default function Page() {
     );
   }
 
+  const theme = data.settings?.theme || 'light';
+
+  const handleToggleTheme = () => {
+    updateData((prev) => ({
+      ...prev,
+      settings: {
+        ...prev.settings,
+        theme: prev.settings?.theme === 'dark' ? 'light' : 'dark',
+      },
+    }));
+  };
+
   return (
-    <div className="min-h-screen bg-slate-50/50 flex flex-col selection:bg-sky-200">
+    <div
+      className={
+        theme === 'dark'
+          ? 'dark min-h-screen bg-slate-950 text-slate-100 flex flex-col selection:bg-sky-500/30 transition-colors'
+          : 'min-h-screen bg-slate-50/50 text-slate-800 flex flex-col selection:bg-sky-200 transition-colors'
+      }
+    >
       {/* Top Header */}
       <Header
         currentTab={currentTab}
         onSelectTab={setCurrentTab}
         notificationsEnabled={notificationsEnabled}
         onToggleNotifications={() => setNotificationsEnabled((prev) => !prev)}
+        theme={theme}
+        onToggleTheme={handleToggleTheme}
       />
 
       {/* Active Floating Alert (Alarm Simulator & Trigger) */}
@@ -242,6 +268,12 @@ export default function Page() {
                   updateData(() => newData);
                 }}
                 onClose={() => setCurrentTab('home')}
+                onSetTheme={(t) => {
+                  updateData((prev) => ({
+                    ...prev,
+                    settings: { ...prev.settings, theme: t },
+                  }));
+                }}
               />
             )}
           </motion.div>
@@ -249,15 +281,15 @@ export default function Page() {
       </main>
 
       {/* Sticky Bottom Quick Navigation Bar (always 1 tap away) */}
-      <nav className="sticky bottom-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/80 shadow-md">
+      <nav className="sticky bottom-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200/80 dark:border-slate-800 shadow-md transition-colors">
         <div className="max-w-md mx-auto px-2 py-2 flex items-center justify-around gap-1">
           {/* Home */}
           <button
             onClick={() => setCurrentTab('home')}
             className={`flex flex-col items-center justify-center py-1.5 px-3 rounded-2xl transition cursor-pointer ${
               currentTab === 'home'
-                ? 'text-sky-600 font-black bg-sky-50'
-                : 'text-slate-500 hover:text-slate-800'
+                ? 'text-sky-600 dark:text-sky-400 font-black bg-sky-50 dark:bg-sky-950/60'
+                : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
             }`}
           >
             <span className="text-xl">🏠</span>
@@ -269,8 +301,8 @@ export default function Page() {
             onClick={() => setCurrentTab('water')}
             className={`flex flex-col items-center justify-center py-1.5 px-3 rounded-2xl transition cursor-pointer ${
               currentTab === 'water'
-                ? 'text-sky-600 font-black bg-sky-50'
-                : 'text-slate-500 hover:text-slate-800'
+                ? 'text-sky-600 dark:text-sky-400 font-black bg-sky-50 dark:bg-sky-950/60'
+                : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
             }`}
           >
             <span className="text-xl">💧</span>
@@ -282,8 +314,8 @@ export default function Page() {
             onClick={() => setCurrentTab('exercise')}
             className={`flex flex-col items-center justify-center py-1.5 px-3 rounded-2xl transition cursor-pointer ${
               currentTab === 'exercise'
-                ? 'text-emerald-600 font-black bg-emerald-50'
-                : 'text-slate-500 hover:text-slate-800'
+                ? 'text-emerald-600 dark:text-emerald-400 font-black bg-emerald-50 dark:bg-emerald-950/60'
+                : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
             }`}
           >
             <span className="text-xl">🏃</span>
@@ -295,8 +327,8 @@ export default function Page() {
             onClick={() => setCurrentTab('sleep')}
             className={`flex flex-col items-center justify-center py-1.5 px-3 rounded-2xl transition cursor-pointer ${
               currentTab === 'sleep'
-                ? 'text-indigo-600 font-black bg-indigo-50'
-                : 'text-slate-500 hover:text-slate-800'
+                ? 'text-indigo-600 dark:text-indigo-400 font-black bg-indigo-50 dark:bg-indigo-950/60'
+                : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
             }`}
           >
             <span className="text-xl">😴</span>
@@ -308,8 +340,8 @@ export default function Page() {
             onClick={() => setCurrentTab('medicine')}
             className={`flex flex-col items-center justify-center py-1.5 px-3 rounded-2xl transition cursor-pointer ${
               currentTab === 'medicine'
-                ? 'text-amber-600 font-black bg-amber-50'
-                : 'text-slate-500 hover:text-slate-800'
+                ? 'text-amber-600 dark:text-amber-400 font-black bg-amber-50 dark:bg-amber-950/60'
+                : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
             }`}
           >
             <span className="text-xl">💊</span>

@@ -23,20 +23,50 @@ export function getDayNameBR(dayIndex: number): string {
   return names[dayIndex] || '';
 }
 
+export function calculateStreak(
+  history: { date: string; completed: boolean }[],
+  todayStr: string
+): number {
+  const completedSet = new Set(
+    history.filter((h) => h.completed).map((h) => h.date)
+  );
+
+  const parts = todayStr.split('-').map(Number);
+  const checkDate = new Date(parts[0], parts[1] - 1, parts[2]);
+  let streak = 0;
+
+  // If today is completed, count starting from today. If not, start from yesterday
+  if (!completedSet.has(todayStr)) {
+    checkDate.setDate(checkDate.getDate() - 1);
+  }
+
+  while (true) {
+    const y = checkDate.getFullYear();
+    const m = String(checkDate.getMonth() + 1).padStart(2, '0');
+    const d = String(checkDate.getDate()).padStart(2, '0');
+    const dateKey = `${y}-${m}-${d}`;
+
+    if (completedSet.has(dateKey)) {
+      streak++;
+      checkDate.setDate(checkDate.getDate() - 1);
+    } else {
+      break;
+    }
+  }
+
+  return streak;
+}
+
 export const defaultInitialData: AppData = {
   water: {
     weightKg: 70,
     dailyGoalMl: 2450, // 70 * 35 ml
-    consumedMl: 1000,
+    consumedMl: 0,
     reminderTimes: ['08:00', '10:30', '13:00', '15:30', '18:00', '20:30'],
     soundEnabled: true,
     vibrationEnabled: true,
     lastUpdatedDate: getTodayString(),
-    history: [
-      { date: '2026-10-09', amountMl: 2200, goalMl: 2450 },
-      { date: '2026-10-10', amountMl: 2500, goalMl: 2450 },
-      { date: '2026-10-11', amountMl: 2450, goalMl: 2450 },
-    ],
+    history: [],
   },
   exercise: {
     type: 'caminhada',
@@ -44,25 +74,17 @@ export const defaultInitialData: AppData = {
     selectedDays: [1, 2, 3, 4, 5], // Seg a Sex
     reminderTime: '17:30',
     durationMinutes: 30,
-    streakDays: 3,
-    lastCompletedDate: '2026-10-11',
+    streakDays: 0,
+    lastCompletedDate: null,
     soundEnabled: true,
-    history: [
-      { date: '2026-10-09', completed: true, type: 'caminhada' },
-      { date: '2026-10-10', completed: true, type: 'caminhada' },
-      { date: '2026-10-11', completed: true, type: 'caminhada' },
-    ],
+    history: [],
   },
   sleep: {
     targetBedTime: '22:30',
     targetWakeTime: '06:30',
     windDownNoticeMinutes: 30,
     soundEnabled: true,
-    history: [
-      { date: '2026-10-09', sleepTime: '22:40', wakeTime: '06:30', rating: 'bom', note: 'Dormi rápido' },
-      { date: '2026-10-10', sleepTime: '23:00', wakeTime: '07:00', rating: 'otimo', note: 'Noite tranquila' },
-      { date: '2026-10-11', sleepTime: '22:30', wakeTime: '06:20', rating: 'bom', note: 'Descansei bem' },
-    ],
+    history: [],
   },
   medicine: {
     medicines: [
@@ -74,10 +96,7 @@ export const defaultInitialData: AppData = {
         frequency: 'daily',
         notes: 'Tomar junto ao café da manhã com água',
         color: '#0284c7',
-        history: [
-          { date: '2026-10-10', time: '08:00', takenAt: '08:05' },
-          { date: '2026-10-11', time: '08:00', takenAt: '08:00' },
-        ],
+        history: [],
       },
       {
         id: 'med-2',
@@ -87,10 +106,7 @@ export const defaultInitialData: AppData = {
         frequency: 'daily',
         notes: 'Não deitar imediatamente após tomar',
         color: '#7c3aed',
-        history: [
-          { date: '2026-10-10', time: '20:00', takenAt: '20:10' },
-          { date: '2026-10-11', time: '20:00', takenAt: '20:02' },
-        ],
+        history: [],
       },
     ],
     soundEnabled: true,
@@ -98,6 +114,7 @@ export const defaultInitialData: AppData = {
   settings: {
     userName: '',
     notificationsAllowed: false,
+    theme: 'light',
   },
 };
 
@@ -138,6 +155,45 @@ export function loadAppData(): AppData {
 
     const data: AppData = JSON.parse(raw);
     const today = getTodayString();
+
+    // Clean mock history if present
+    const mockDates = new Set(['2026-10-09', '2026-10-10', '2026-10-11']);
+    let hadMocks = false;
+
+    if (data.exercise?.history && data.exercise.history.some((h) => mockDates.has(h.date))) {
+      data.exercise.history = data.exercise.history.filter((h) => !mockDates.has(h.date));
+      data.exercise.streakDays = calculateStreak(data.exercise.history, today);
+      if (data.exercise.lastCompletedDate && mockDates.has(data.exercise.lastCompletedDate)) {
+        data.exercise.lastCompletedDate = null;
+      }
+      hadMocks = true;
+    }
+
+    if (data.sleep?.history && data.sleep.history.some((h) => mockDates.has(h.date))) {
+      data.sleep.history = data.sleep.history.filter((h) => !mockDates.has(h.date));
+      hadMocks = true;
+    }
+
+    if (data.medicine?.medicines) {
+      data.medicine.medicines.forEach((med) => {
+        if (med.history && med.history.some((h) => mockDates.has(h.date))) {
+          med.history = med.history.filter((h) => !mockDates.has(h.date));
+          hadMocks = true;
+        }
+      });
+    }
+
+    if (!data.settings) {
+      data.settings = { notificationsAllowed: false, theme: 'light' };
+      hadMocks = true;
+    } else if (!data.settings.theme) {
+      data.settings.theme = 'light';
+      hadMocks = true;
+    }
+
+    if (hadMocks) {
+      saveAppData(data);
+    }
 
     // Check if new day for Water
     if (data.water.lastUpdatedDate !== today) {

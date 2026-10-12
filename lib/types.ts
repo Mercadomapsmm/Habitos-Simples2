@@ -66,6 +66,7 @@ export interface MedicineState {
 export interface AppSettings {
   userName?: string;
   notificationsAllowed: boolean;
+  theme?: 'light' | 'dark';
 }
 
 export interface AppData {

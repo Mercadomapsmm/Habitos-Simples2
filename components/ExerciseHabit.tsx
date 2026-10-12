@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { ExerciseState, ExerciseType } from '@/lib/types';
-import { getTodayString, getDayNameBR } from '@/lib/storage';
+import { getTodayString, getDayNameBR, calculateStreak } from '@/lib/storage';
 import { sounds, triggerVibration } from '@/lib/sound';
 import confetti from 'canvas-confetti';
 import {
@@ -16,6 +16,7 @@ import {
   ChevronRight,
   Edit2,
   Save,
+  Check,
 } from 'lucide-react';
 
 interface ExerciseHabitProps {
@@ -53,31 +54,46 @@ export function ExerciseHabit({ exerciseState, onUpdate }: ExerciseHabitProps) {
   const [time, setTime] = useState(exerciseState.reminderTime);
   const [duration, setDuration] = useState(exerciseState.durationMinutes);
 
-  // Toggle "Fiz hoje!"
-  const handleToggleDone = () => {
+  // Toggle specific date when clicked directly in the 7-day row
+  const handleToggleSpecificDay = (e: React.MouseEvent, targetDate: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+
     onUpdate((prev) => {
-      const alreadyDone = prev.lastCompletedDate === todayStr;
-      if (alreadyDone) {
-        // Undo
-        return {
-          ...prev,
-          lastCompletedDate: null,
-          streakDays: Math.max(0, prev.streakDays - 1),
-          history: prev.history.filter((h) => h.date !== todayStr),
-        };
+      const alreadyCompleted =
+        (prev.lastCompletedDate === targetDate && targetDate === todayStr) ||
+        prev.history.some((h) => h.date === targetDate && h.completed);
+
+      let newHistory;
+      if (alreadyCompleted) {
+        newHistory = prev.history.filter((h) => h.date !== targetDate);
       } else {
-        // Complete today!
-        return {
-          ...prev,
-          lastCompletedDate: todayStr,
-          streakDays: prev.streakDays + 1,
-          history: [
-            ...prev.history.filter((h) => h.date !== todayStr),
-            { date: todayStr, completed: true, type: prev.type },
-          ],
-        };
+        newHistory = [
+          ...prev.history.filter((h) => h.date !== targetDate),
+          { date: targetDate, completed: true, type: prev.type },
+        ];
       }
+
+      const isTodayCompleted = newHistory.some(
+        (h) => h.date === todayStr && h.completed
+      );
+      const newStreak = calculateStreak(newHistory, todayStr);
+
+      return {
+        ...prev,
+        lastCompletedDate: isTodayCompleted ? todayStr : null,
+        streakDays: newStreak,
+        history: newHistory,
+      };
     });
+  };
+
+  // Toggle "Fiz hoje!"
+  const handleToggleDone = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    handleToggleSpecificDay(e, todayStr);
 
     if (!isDoneToday) {
       sounds.playExerciseChime();
@@ -235,29 +251,47 @@ export function ExerciseHabit({ exerciseState, onUpdate }: ExerciseHabitProps) {
 
       {/* 7-Day History Track */}
       <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-xs space-y-3">
-        <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
-          <Calendar className="w-4 h-4 text-emerald-600" />
-          Seus últimos 7 dias:
-        </h4>
+        <div className="flex items-center justify-between">
+          <h4 className="text-xs sm:text-sm font-black text-emerald-900 tracking-wide flex items-center gap-1.5 uppercase">
+            <Calendar className="w-4 h-4 text-emerald-600" />
+            Seus últimos 7 dias:
+          </h4>
+          <span className="text-[11px] font-semibold text-slate-400">
+            Toque para marcar / desmarcar
+          </span>
+        </div>
 
-        <div className="grid grid-cols-7 gap-1.5 text-center">
+        <div className="grid grid-cols-7 gap-1 sm:gap-2 text-center">
           {recentDays.map((d) => (
-            <div
+            <button
               key={d.dateStr}
-              className={`p-2 rounded-2xl border transition ${
+              type="button"
+              onClick={(e) => handleToggleSpecificDay(e, d.dateStr)}
+              className={`p-2 sm:p-2.5 rounded-2xl border transition-all cursor-pointer active:scale-95 flex flex-col items-center justify-between min-h-[82px] select-none ${
                 d.isCompleted
-                  ? 'bg-emerald-50 border-emerald-300 text-emerald-900'
-                  : 'bg-slate-50 border-slate-200 text-slate-500'
-              } ${d.isToday ? 'ring-2 ring-emerald-500' : ''}`}
+                  ? 'bg-emerald-50/90 border-2 border-emerald-400 text-emerald-950 shadow-2xs'
+                  : 'bg-slate-50/70 hover:bg-slate-100/90 border border-slate-200 text-slate-600'
+              } ${d.isToday ? 'ring-2 ring-emerald-500 border-2 border-emerald-500' : ''}`}
+              title={`Clique para ${d.isCompleted ? 'desmarcar' : 'marcar'} ${d.dayName} (${d.dateStr})`}
             >
-              <div className="text-[10px] font-bold text-slate-400">{d.dayName}</div>
-              <div className="text-lg my-1 select-none">
-                {d.isCompleted ? '✅' : '⚪'}
+              <span className="text-[11px] font-bold text-slate-400">
+                {d.dayName}
+              </span>
+
+              <div className="my-1.5">
+                {d.isCompleted ? (
+                  <div className="w-6 h-6 rounded-md bg-emerald-500 border-2 border-emerald-600 flex items-center justify-center text-white shadow-xs">
+                    <Check className="w-4 h-4 stroke-[3]" />
+                  </div>
+                ) : (
+                  <div className="w-6 h-6 rounded-full border-2 border-slate-400/80 bg-white" />
+                )}
               </div>
-              <div className="text-[10px] font-semibold">
+
+              <span className="text-[11px] font-bold text-slate-700">
                 {d.isToday ? 'Hoje' : d.dateStr.slice(8, 10)}
-              </div>
-            </div>
+              </span>
+            </button>
           ))}
         </div>
       </div>
