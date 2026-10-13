@@ -10,8 +10,8 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: 'Hábitos Simples - Água, Exercício, Sono e Remédios',
-  description: 'Aplicativo gratuito e leve para cuidar de 4 hábitos essenciais: beber água, se exercitar, dormir bem e tomar remédios. 100% offline, fácil e sem cadastro.',
+  title: 'Hábitos Simples - Água e Remédios',
+  description: 'Aplicativo gratuito e leve para cuidar de hábitos essenciais: beber água e tomar remédios. 100% offline, fácil e sem cadastro.',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
@@ -23,13 +23,13 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: 'Hábitos Simples',
-    description: 'Aplicativo leve e gratuito para manter 4 hábitos essenciais: beber água, se exercitar, dormir bem e tomar remédios.',
+    description: 'Aplicativo leve e gratuito para manter hábitos essenciais: beber água e tomar remédios.',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Hábitos Simples',
-    description: 'Aplicativo leve e gratuito para manter 4 hábitos essenciais: beber água, se exercitar, dormir bem e tomar remédios.',
+    description: 'Aplicativo leve e gratuito para manter hábitos essenciais: beber água e tomar remédios.',
   },
 };
 

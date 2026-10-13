@@ -43,10 +43,6 @@ export function Header({
     switch (currentTab) {
       case 'water':
         return { title: 'Lembrete de Água', subtitle: 'Hidratação e Saúde', icon: '💧' };
-      case 'exercise':
-        return { title: 'Lembrete de Exercício', subtitle: 'Corpo Ativo e Disposição', icon: '🏃' };
-      case 'sleep':
-        return { title: 'Hábito de Sono', subtitle: 'Noites Calmas e Reparadoras', icon: '😴' };
       case 'medicine':
         return { title: 'Lembrete de Remédio', subtitle: 'Doses e Horários Certos', icon: '💊' };
       case 'about':

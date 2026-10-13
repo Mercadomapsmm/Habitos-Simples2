@@ -5,17 +5,13 @@ import { HabitTab, AppData } from '@/lib/types';
 import { getTodayString, getDayNameBR, formatDateBR } from '@/lib/storage';
 import {
   Droplet,
-  Flame,
-  Moon,
   Pill,
   CheckCircle2,
   ChevronRight,
   Plus,
-  Clock,
   Sparkles,
   ShieldCheck,
   Smartphone,
-  HeartHandshake,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { sounds, triggerVibration } from '@/lib/sound';
@@ -24,45 +20,29 @@ interface HomeScreenProps {
   data: AppData;
   onSelectTab: (tab: HabitTab) => void;
   onQuickDrinkWater: (amountMl: number) => void;
-  onQuickToggleExercise: () => void;
   onUpdateDailyEmoji?: (date: string, emoji: string | null) => void;
 }
 
 const quickDailyEmojis = [
-  // Atividades & Energia
-  { emoji: '💪', label: 'Força' },
-  { emoji: '🏃‍♂️', label: 'Corrida' },
-  { emoji: '🚶‍♂️', label: 'Caminhada' },
-  { emoji: '🏋️‍♂️', label: 'Academia' },
-  { emoji: '🚴‍♂️', label: 'Ciclismo' },
-  { emoji: '🧘‍♀️', label: 'Alongamento' },
-  { emoji: '🏊‍♂️', label: 'Natação' },
-  { emoji: '🔥', label: 'Queima' },
-  { emoji: '⚡', label: 'Energia' },
-  { emoji: '🏆', label: 'Vitória' },
-  // Sono & Relaxamento
-  { emoji: '🤩', label: 'Excelente' },
-  { emoji: '😊', label: 'Dormi Bem' },
-  { emoji: '😴', label: 'Sono Profundo' },
-  { emoji: '🥱', label: 'Cansado' },
-  { emoji: '🌙', label: 'Noite Calma' },
-  { emoji: '🛌', label: 'Descanso' },
-  // Hábitos & Dia a Dia
+  // Hidratação & Saúde
   { emoji: '💧', label: 'Hidratado' },
-  { emoji: '🥗', label: 'Alimentação' },
   { emoji: '💊', label: 'Remédios' },
   { emoji: '🌟', label: 'Dia Nota 10' },
-  { emoji: '❤️', label: 'Gratidão' },
-  { emoji: '🎯', label: 'Foco Total' },
-  { emoji: '🥳', label: 'Comemoração' },
+  { emoji: '😊', label: 'Bem-estar' },
+  { emoji: '❤️', label: 'Saúde' },
+  { emoji: '🎯', label: 'Foco' },
+  { emoji: '🥗', label: 'Alimentação' },
   { emoji: '🌿', label: 'Equilíbrio' },
+  { emoji: '☀️', label: 'Disposição' },
+  { emoji: '🏆', label: 'Meta Batida' },
+  { emoji: '🥳', label: 'Comemoração' },
+  { emoji: '✨', label: 'Brilho' },
 ];
 
 export function HomeScreen({
   data,
   onSelectTab,
   onQuickDrinkWater,
-  onQuickToggleExercise,
   onUpdateDailyEmoji,
 }: HomeScreenProps) {
   const todayStr = getTodayString();
@@ -74,12 +54,6 @@ export function HomeScreen({
     Math.round((data.water.consumedMl / Math.max(1, data.water.dailyGoalMl)) * 100)
   );
   const waterDone = data.water.consumedMl >= data.water.dailyGoalMl;
-
-  // Exercise status
-  const exerciseDone = data.exercise.lastCompletedDate === todayStr;
-
-  // Sleep status: check if rated today
-  const sleepToday = data.sleep.history.find((h) => h.date === todayStr);
 
   // Medicine status: check how many doses left today
   let totalDosesToday = 0;
@@ -93,12 +67,10 @@ export function HomeScreen({
   });
   const allMedsDone = totalDosesToday > 0 ? takenDosesToday >= totalDosesToday : true;
 
-  // Overall daily score: 0 to 4
+  // Overall daily score: 0 to 2
+  const maxHabits = totalDosesToday > 0 ? 2 : 1;
   const completedHabitsCount =
-    (waterDone ? 1 : 0) +
-    (exerciseDone ? 1 : 0) +
-    (sleepToday ? 1 : 0) +
-    (allMedsDone && totalDosesToday > 0 ? 1 : 0);
+    (waterDone ? 1 : 0) + (totalDosesToday > 0 && allMedsDone ? 1 : 0);
 
   // Greeting
   const currentHour = new Date().getHours();
@@ -136,11 +108,7 @@ export function HomeScreen({
       d.setDate(now.getDate() - i);
       const dateStr = d.toISOString().split('T')[0];
       const dayName = getDayNameBR(d.getDay());
-      const emoji =
-        data.dailyEmojis?.[dateStr] ||
-        data.exercise.history.find((h) => h.date === dateStr && h.completed)?.emoji ||
-        data.sleep.history.find((h) => h.date === dateStr)?.emoji ||
-        (data.exercise.lastCompletedDate === dateStr && dateStr === todayStr ? '💪' : undefined);
+      const emoji = data.dailyEmojis?.[dateStr];
 
       list.push({
         dateStr,
@@ -153,11 +121,6 @@ export function HomeScreen({
   };
 
   const recentDays = getRecent7Days();
-
-  const todayExerciseEmoji =
-    data.exercise.history.find((h) => h.date === todayStr && h.completed)?.emoji ||
-    data.dailyEmojis?.[todayStr] ||
-    '💪';
 
   return (
     <div className="space-y-6 pb-12 animate-fade-in">
@@ -188,13 +151,13 @@ export function HomeScreen({
               Seu Dia Saudável
             </span>
             <span className="text-sky-700 dark:text-sky-400 font-extrabold">
-              {completedHabitsCount} de 4 hábitos em dia
+              {completedHabitsCount} de {maxHabits} hábitos em dia
             </span>
           </div>
           <div className="w-full h-3 bg-white dark:bg-slate-800 rounded-full overflow-hidden p-0.5 border border-slate-200/60 dark:border-slate-700 shadow-inner">
             <div
               className="h-full bg-gradient-to-r from-sky-400 via-teal-400 to-emerald-400 rounded-full transition-all duration-700 ease-out"
-              style={{ width: `${(completedHabitsCount / 4) * 100}%` }}
+              style={{ width: `${(completedHabitsCount / maxHabits) * 100}%` }}
             />
           </div>
         </div>
@@ -215,7 +178,7 @@ export function HomeScreen({
         </div>
 
         <p className="text-xs text-slate-500 dark:text-slate-400">
-          Marque emojis variados a cada dia para registrar sua rotina:
+          Marque emojis variados a cada dia para registrar como você está se cuidando:
         </p>
 
         {/* 7 Days Row */}
@@ -305,10 +268,7 @@ export function HomeScreen({
             {/* Quick Palette of Varied Emojis */}
             <div className="grid grid-cols-6 sm:grid-cols-12 gap-1.5 sm:gap-2">
               {quickDailyEmojis.map((item) => {
-                const currentEmoji =
-                  data.dailyEmojis?.[selectedHomeDay] ||
-                  data.exercise.history.find((h) => h.date === selectedHomeDay && h.completed)?.emoji ||
-                  data.sleep.history.find((h) => h.date === selectedHomeDay)?.emoji;
+                const currentEmoji = data.dailyEmojis?.[selectedHomeDay];
                 const isCurrent = currentEmoji === item.emoji;
 
                 return (
@@ -337,13 +297,13 @@ export function HomeScreen({
               })}
             </div>
             <p className="text-[11px] text-slate-500 dark:text-slate-400 text-center">
-              Toque em qualquer emoji para marcar o dia com seu registro variado!
+              Toque em qualquer emoji para marcar o dia com salvamento automático!
             </p>
           </div>
         )}
       </div>
 
-      {/* 4 Big Equal Cards - 1 Tap Away */}
+      {/* 2 Big Cards - 1 Tap Away (Water and Medicine) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {/* 1️⃣ WATER CARD */}
         <div
@@ -356,39 +316,39 @@ export function HomeScreen({
           {/* Card Top */}
           <div>
             <div className="flex items-start justify-between gap-3 mb-3">
-              <div className="w-14 h-14 rounded-2xl bg-sky-100 flex items-center justify-center text-sky-600 shadow-inner group-hover:bg-sky-200 transition">
+              <div className="w-14 h-14 rounded-2xl bg-sky-100 dark:bg-sky-950/60 flex items-center justify-center text-sky-600 dark:text-sky-400 shadow-inner group-hover:bg-sky-200 transition">
                 <Droplet className="w-8 h-8 fill-sky-500 stroke-sky-600" />
               </div>
               {waterDone ? (
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                   Meta Atingida!
                 </span>
               ) : (
-                <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-sky-50 text-sky-700 border border-sky-100">
+                <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 border border-sky-100 dark:border-sky-800">
                   {waterPercent}%
                 </span>
               )}
             </div>
 
-            <h3 className="text-xl font-black text-slate-900 group-hover:text-sky-700 transition">
+            <h3 className="text-xl font-black text-slate-900 dark:text-white group-hover:text-sky-600 transition">
               1. Beber Água
             </h3>
-            <p className="text-xs font-medium text-slate-500 mt-0.5">
+            <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-0.5">
               Meta: {data.water.dailyGoalMl.toLocaleString('pt-BR')} ml por dia
             </p>
 
             {/* Visual water level bar */}
             <div className="mt-3.5 space-y-1">
-              <div className="w-full h-3 bg-sky-50 rounded-full overflow-hidden border border-sky-100">
+              <div className="w-full h-3 bg-sky-50 dark:bg-slate-800 rounded-full overflow-hidden border border-sky-100 dark:border-slate-700">
                 <div
                   className="h-full bg-gradient-to-r from-sky-400 to-sky-500 rounded-full transition-all duration-500"
                   style={{ width: `${waterPercent}%` }}
                 />
               </div>
-              <div className="flex justify-between text-xs font-semibold text-slate-600 pt-0.5">
+              <div className="flex justify-between text-xs font-semibold text-slate-600 dark:text-slate-300 pt-0.5">
                 <span>{data.water.consumedMl.toLocaleString('pt-BR')} ml</span>
-                <span className="text-slate-400">
+                <span className="text-slate-400 dark:text-slate-500">
                   falta {Math.max(0, data.water.dailyGoalMl - data.water.consumedMl)} ml
                 </span>
               </div>
@@ -396,7 +356,7 @@ export function HomeScreen({
           </div>
 
           {/* Quick Action Button */}
-          <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
+          <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
             <button
               onClick={handleQuickDrink}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-sky-500 hover:bg-sky-600 active:bg-sky-700 text-white text-xs font-bold rounded-xl shadow-xs transition active:scale-95 cursor-pointer"
@@ -405,125 +365,13 @@ export function HomeScreen({
               <Plus className="w-3.5 h-3.5" />
               + 250 ml agora
             </button>
-            <span className="text-xs font-bold text-sky-600 flex items-center group-hover:translate-x-1 transition">
+            <span className="text-xs font-bold text-sky-600 dark:text-sky-400 flex items-center group-hover:translate-x-1 transition">
               Abrir <ChevronRight className="w-4 h-4 ml-0.5" />
             </span>
           </div>
         </div>
 
-        {/* 2️⃣ EXERCISE CARD */}
-        <div
-          role="button"
-          tabIndex={0}
-          onClick={() => onSelectTab('exercise')}
-          onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && onSelectTab('exercise')}
-          className="group relative text-left p-5 rounded-3xl bg-white dark:bg-slate-900 border-2 border-emerald-100 dark:border-slate-800 hover:border-emerald-300 dark:hover:border-emerald-600 shadow-sm hover:shadow-md transition-all duration-200 active:scale-[0.98] cursor-pointer flex flex-col justify-between"
-        >
-          <div>
-            <div className="flex items-start justify-between gap-3 mb-3">
-              <div className="w-14 h-14 rounded-2xl bg-emerald-100 dark:bg-emerald-950/60 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shadow-inner group-hover:bg-emerald-200 transition">
-                <span className="text-3xl select-none" role="img" aria-label="Tênis">
-                  👟
-                </span>
-              </div>
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-extrabold bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300">
-                <Flame className="w-3.5 h-3.5 text-amber-600 fill-amber-500" />
-                {data.exercise.streakDays} dias seguidos
-              </span>
-            </div>
-
-            <h3 className="text-xl font-black text-slate-900 dark:text-white group-hover:text-emerald-600 transition capitalize">
-              2. Exercício e Atividades
-            </h3>
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-0.5">
-              {data.exercise.activities && data.exercise.activities.length > 0
-                ? `${data.exercise.activities.filter((a) => a.enabled).length} atividades com agenda própria`
-                : 'Agenda personalizada por atividade'}
-            </p>
-
-            <div className="mt-3.5 p-2.5 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/40 border border-emerald-100 dark:border-emerald-800 flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Status de hoje:</span>
-              {exerciseDone ? (
-                <span className="inline-flex items-center gap-1.5 text-xs font-extrabold text-emerald-700 dark:text-emerald-400">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                  <span>Feito! {todayExerciseEmoji}</span>
-                </span>
-              ) : (
-                <span className="text-xs font-bold text-amber-700 dark:text-amber-400">
-                  Pendente hoje 💪
-                </span>
-              )}
-            </div>
-          </div>
-
-          <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onQuickToggleExercise();
-              }}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-xl shadow-xs transition active:scale-95 cursor-pointer ${
-                exerciseDone
-                  ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700'
-                  : 'bg-emerald-600 hover:bg-emerald-700 text-white'
-              }`}
-            >
-              <CheckCircle2 className="w-3.5 h-3.5" />
-              {exerciseDone ? 'Fiz hoje! (Desfazer)' : 'Fiz hoje!'}
-            </button>
-            <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center group-hover:translate-x-1 transition">
-              Ver Agenda <ChevronRight className="w-4 h-4 ml-0.5" />
-            </span>
-          </div>
-        </div>
-
-        {/* 3️⃣ SLEEP CARD */}
-        <div
-          role="button"
-          tabIndex={0}
-          onClick={() => onSelectTab('sleep')}
-          onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && onSelectTab('sleep')}
-          className="group relative text-left p-5 rounded-3xl bg-white dark:bg-slate-900 border-2 border-indigo-100 dark:border-slate-800 hover:border-indigo-300 dark:hover:border-indigo-600 shadow-sm hover:shadow-md transition-all duration-200 active:scale-[0.98] cursor-pointer flex flex-col justify-between"
-        >
-          <div>
-            <div className="flex items-start justify-between gap-3 mb-3">
-              <div className="w-14 h-14 rounded-2xl bg-indigo-100 dark:bg-indigo-950/60 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shadow-inner group-hover:bg-indigo-200 transition">
-                <Moon className="w-8 h-8 fill-indigo-400 stroke-indigo-600" />
-              </div>
-              <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-800 flex items-center gap-1">
-                <Clock className="w-3 h-3" />
-                Desacelerar: 30 min antes
-              </span>
-            </div>
-
-            <h3 className="text-xl font-black text-slate-900 dark:text-white group-hover:text-indigo-600 transition">
-              3. Hábito de Sono
-            </h3>
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-0.5">
-              Dormir: {data.sleep.targetBedTime} • Acordar: {data.sleep.targetWakeTime}
-            </p>
-
-            <div className="mt-3.5 p-2.5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-800 flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Última noite:</span>
-              <span className="text-xs font-extrabold text-indigo-700 dark:text-indigo-400">
-                {sleepToday?.rating
-                  ? `Avaliado: ${sleepToday.rating}`
-                  : 'Descanse bem hoje 🌙'}
-              </span>
-            </div>
-          </div>
-
-          <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-              💡 Desligue telas 20 min antes
-            </span>
-            <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400 flex items-center group-hover:translate-x-1 transition">
-              Abrir <ChevronRight className="w-4 h-4 ml-0.5" />
-            </span>
-          </div>
-        </div>
-
-        {/* 4️⃣ MEDICINE CARD */}
+        {/* 2️⃣ MEDICINE CARD */}
         <div
           role="button"
           tabIndex={0}
@@ -542,7 +390,7 @@ export function HomeScreen({
             </div>
 
             <h3 className="text-xl font-black text-slate-900 dark:text-white group-hover:text-amber-600 transition">
-              4. Remédios
+              2. Remédios
             </h3>
             <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-0.5">
               Horários regulares • Aviso até confirmar

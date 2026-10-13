@@ -1,4 +1,4 @@
-export type HabitTab = 'home' | 'water' | 'exercise' | 'sleep' | 'medicine' | 'about';
+export type HabitTab = 'home' | 'water' | 'medicine' | 'about';
 
 export interface WaterState {
   weightKg: number;
@@ -40,7 +40,7 @@ export interface ExerciseState {
     emoji?: string;
   }[];
   soundEnabled: boolean;
-  activities: ExerciseActivity[];
+  activities?: ExerciseActivity[];
 }
 
 export type SleepRating = 'otimo' | 'bom' | 'regular' | 'ruim';

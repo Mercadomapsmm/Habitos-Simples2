@@ -314,7 +314,7 @@ export function AboutModal({
         <div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border-2 border-slate-100 dark:border-slate-800 shadow-xs space-y-5 animate-fade-in transition-colors">
           <div>
             <h3 className="text-base font-black text-slate-900 dark:text-white">
-              Os 4 Pilares do Hábitos Simples
+              Os Pilares do Hábitos Simples
             </h3>
             <div className="grid grid-cols-2 gap-2 mt-3">
               <div className="p-3 bg-sky-50 dark:bg-sky-950/40 rounded-2xl border border-sky-100 dark:border-sky-800 text-xs">
@@ -322,20 +322,10 @@ export function AboutModal({
                 <div className="font-bold text-sky-900 dark:text-sky-200 mt-1">1. Água</div>
                 <div className="text-[11px] text-slate-500 dark:text-slate-400">Cálculo por peso e metas visuais.</div>
               </div>
-              <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 rounded-2xl border border-emerald-100 dark:border-emerald-800 text-xs">
-                <span className="text-lg">🏃</span>
-                <div className="font-bold text-emerald-900 dark:text-emerald-200 mt-1">2. Exercício</div>
-                <div className="text-[11px] text-slate-500 dark:text-slate-400">Agenda separada para cada atividade.</div>
-              </div>
-              <div className="p-3 bg-indigo-50 dark:bg-indigo-950/40 rounded-2xl border border-indigo-100 dark:border-indigo-800 text-xs">
-                <span className="text-lg">😴</span>
-                <div className="font-bold text-indigo-900 dark:text-indigo-200 mt-1">3. Sono</div>
-                <div className="text-[11px] text-slate-500 dark:text-slate-400">Aviso para desacelerar e histórico.</div>
-              </div>
               <div className="p-3 bg-amber-50 dark:bg-amber-950/40 rounded-2xl border border-amber-100 dark:border-amber-800 text-xs">
                 <span className="text-lg">💊</span>
-                <div className="font-bold text-amber-900 dark:text-amber-200 mt-1">4. Remédios</div>
-                <div className="text-[11px] text-slate-500 dark:text-slate-400">Avisos insistentes até confirmar.</div>
+                <div className="font-bold text-amber-900 dark:text-amber-200 mt-1">2. Remédios</div>
+                <div className="text-[11px] text-slate-500 dark:text-slate-400">Avisos de horário até confirmar.</div>
               </div>
             </div>
           </div>

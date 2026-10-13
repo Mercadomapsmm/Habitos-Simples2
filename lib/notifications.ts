@@ -3,7 +3,7 @@ import { sounds, triggerVibration } from './sound';
 
 export interface ActiveAlert {
   id: string;
-  type: 'water' | 'exercise' | 'sleep' | 'medicine';
+  type: 'water' | 'medicine';
   title: string;
   message: string;
   medicineId?: string;
@@ -80,56 +80,7 @@ export function checkActiveAlerts(data: AppData, todayStr: string): ActiveAlert[
     });
   }
 
-  // 2. Exercise (checks separate agenda for each activity)
-  if (data.exercise.activities && data.exercise.activities.length > 0) {
-    for (const act of data.exercise.activities) {
-      if (
-        act.enabled &&
-        act.selectedDays.includes(currentDayOfWeek) &&
-        act.reminderTime === currentTime
-      ) {
-        alerts.push({
-          id: `exercise-${act.id}-${currentTime}`,
-          type: 'exercise',
-          title: `🏃 Hora de se mexer: ${act.name}!`,
-          message: `Momento do seu ${act.name} (${act.durationMinutes} min). Vai fazer muito bem! 💪`,
-          time: currentTime,
-        });
-      }
-    }
-  } else if (
-    data.exercise.selectedDays.includes(currentDayOfWeek) &&
-    data.exercise.reminderTime === currentTime &&
-    data.exercise.lastCompletedDate !== todayStr
-  ) {
-    const typeLabel =
-      data.exercise.type === 'outro' && data.exercise.customTypeName
-        ? data.exercise.customTypeName
-        : data.exercise.type;
-    alerts.push({
-      id: `exercise-${currentTime}`,
-      type: 'exercise',
-      title: '🏃 Hora de se mexer!',
-      message: `Momento do seu exercício (${typeLabel}). Vai fazer muito bem! 💪`,
-      time: currentTime,
-    });
-  }
-
-  // 3. Sleep wind-down (30 min before target bedtime)
-  const bedMinutes = timeToMinutes(data.sleep.targetBedTime);
-  const windDownMinutes = bedMinutes - data.sleep.windDownNoticeMinutes;
-  const windDownTime = minutesToTime(windDownMinutes);
-  if (currentTime === windDownTime) {
-    alerts.push({
-      id: `sleep-${currentTime}`,
-      type: 'sleep',
-      title: '🌙 Hora de desacelerar',
-      message: 'Faltam 30 minutos para dormir. Desligue telas e relaxe sua mente.',
-      time: currentTime,
-    });
-  }
-
-  // 4. Medicine check
+  // 2. Medicine check
   data.medicine.medicines.forEach((med: Medicine) => {
     med.times.forEach((t) => {
       // Check if matches current time
@@ -156,16 +107,10 @@ export function checkActiveAlerts(data: AppData, todayStr: string): ActiveAlert[
 }
 
 // Trigger alert sound & vibration
-export function triggerAlertEffects(type: 'water' | 'exercise' | 'sleep' | 'medicine') {
+export function triggerAlertEffects(type: 'water' | 'medicine') {
   if (type === 'water') {
     sounds.playWaterDrop();
     triggerVibration([100, 80, 100]);
-  } else if (type === 'exercise') {
-    sounds.playExerciseChime();
-    triggerVibration([150, 60, 150]);
-  } else if (type === 'sleep') {
-    sounds.playSleepBowl();
-    triggerVibration([200, 100, 200]);
   } else if (type === 'medicine') {
     sounds.playMedicineAlert();
     triggerVibration([300, 100, 300, 100, 300]);

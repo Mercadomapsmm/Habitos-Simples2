@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { HabitTab, WaterState, ExerciseState, SleepState, MedicineState } from '@/lib/types';
-import { useAppData, getTodayString, calculateStreak } from '@/lib/storage';
+import { HabitTab, WaterState, MedicineState } from '@/lib/types';
+import { useAppData, getTodayString } from '@/lib/storage';
 import {
   checkActiveAlerts,
   ActiveAlert,
@@ -10,12 +10,9 @@ import {
   sendBrowserNotification,
   hasNotificationPermission,
 } from '@/lib/notifications';
-import { sounds, triggerVibration } from '@/lib/sound';
 import { Header } from '@/components/Header';
 import { HomeScreen } from '@/components/HomeScreen';
 import { WaterHabit } from '@/components/WaterHabit';
-import { ExerciseHabit } from '@/components/ExerciseHabit';
-import { SleepHabit } from '@/components/SleepHabit';
 import { MedicineHabit } from '@/components/MedicineHabit';
 import { AboutModal } from '@/components/AboutModal';
 import { ActiveAlertBanner } from '@/components/ActiveAlertBanner';
@@ -63,14 +60,6 @@ export default function Page() {
     updateData((prev) => ({ ...prev, water: updater(prev.water) }));
   };
 
-  const updateExercise = (updater: (prev: ExerciseState) => ExerciseState) => {
-    updateData((prev) => ({ ...prev, exercise: updater(prev.exercise) }));
-  };
-
-  const updateSleep = (updater: (prev: SleepState) => SleepState) => {
-    updateData((prev) => ({ ...prev, sleep: updater(prev.sleep) }));
-  };
-
   const updateMedicine = (updater: (prev: MedicineState) => MedicineState) => {
     updateData((prev) => ({ ...prev, medicine: updater(prev.medicine) }));
   };
@@ -105,57 +94,17 @@ export default function Page() {
     }));
   };
 
-  // Quick toggle exercise
-  const handleQuickToggleExercise = () => {
-    const todayStr = getTodayString();
-    updateExercise((prev) => {
-      const alreadyDone =
-        prev.lastCompletedDate === todayStr ||
-        prev.history.some((h) => h.date === todayStr && h.completed);
-
-      let newHistory;
-      if (alreadyDone) {
-        newHistory = prev.history.filter((h) => h.date !== todayStr);
-      } else {
-        const todayDay = new Date().getDay();
-        const activeToday = prev.activities?.find(
-          (a) => a.enabled && a.selectedDays.includes(todayDay)
-        );
-        newHistory = [
-          ...prev.history.filter((h) => h.date !== todayStr),
-          {
-            date: todayStr,
-            completed: true,
-            type: activeToday?.type || prev.type || 'caminhada',
-            activityId: activeToday?.id,
-            emoji: activeToday?.icon || '💪',
-          },
-        ];
-      }
-
-      const isTodayDone = newHistory.some(
-        (h) => h.date === todayStr && h.completed
-      );
-      const newStreak = calculateStreak(newHistory, todayStr);
-
-      return {
-        ...prev,
-        lastCompletedDate: isTodayDone ? todayStr : null,
-        streakDays: newStreak,
-        history: newHistory,
-      };
-    });
-  };
-
-  // Update varied emoji for any day from home screen or tracker
+  // Update varied emoji for any day from home screen with automatic saving
   const handleUpdateDailyEmoji = (date: string, emoji: string | null) => {
     updateData((prev) => {
       const current = { ...(prev.dailyEmojis || {}) };
+
       if (!emoji) {
         delete current[date];
       } else {
         current[date] = emoji;
       }
+
       return {
         ...prev,
         dailyEmojis: current,
@@ -173,8 +122,6 @@ export default function Page() {
 
     if (alert.type === 'water') {
       handleQuickDrinkWater(250);
-    } else if (alert.type === 'exercise') {
-      handleQuickToggleExercise();
     } else if (alert.type === 'medicine' && alert.medicineId) {
       const now = new Date();
       const currentClock = `${String(now.getHours()).padStart(2, '0')}:${String(
@@ -274,24 +221,12 @@ export default function Page() {
                 data={data}
                 onSelectTab={setCurrentTab}
                 onQuickDrinkWater={handleQuickDrinkWater}
-                onQuickToggleExercise={handleQuickToggleExercise}
                 onUpdateDailyEmoji={handleUpdateDailyEmoji}
               />
             )}
 
             {currentTab === 'water' && (
               <WaterHabit waterState={data.water} onUpdate={updateWater} />
-            )}
-
-            {currentTab === 'exercise' && (
-              <ExerciseHabit
-                exerciseState={data.exercise}
-                onUpdate={updateExercise}
-              />
-            )}
-
-            {currentTab === 'sleep' && (
-              <SleepHabit sleepState={data.sleep} onUpdate={updateSleep} />
             )}
 
             {currentTab === 'medicine' && (
@@ -322,70 +257,44 @@ export default function Page() {
 
       {/* Sticky Bottom Quick Navigation Bar (always 1 tap away) */}
       <nav className="sticky bottom-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200/80 dark:border-slate-800 shadow-md transition-colors">
-        <div className="max-w-md mx-auto px-2 py-2 flex items-center justify-around gap-1">
+        <div className="max-w-md mx-auto px-4 py-2 flex items-center justify-around gap-2">
           {/* Home */}
           <button
             onClick={() => setCurrentTab('home')}
-            className={`flex flex-col items-center justify-center py-1.5 px-3 rounded-2xl transition cursor-pointer ${
+            className={`flex flex-col items-center justify-center py-1.5 px-4 rounded-2xl transition cursor-pointer ${
               currentTab === 'home'
                 ? 'text-sky-600 dark:text-sky-400 font-black bg-sky-50 dark:bg-sky-950/60'
                 : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
             }`}
           >
             <span className="text-xl">🏠</span>
-            <span className="text-[11px] font-bold">Início</span>
+            <span className="text-xs font-bold">Início</span>
           </button>
 
           {/* Water */}
           <button
             onClick={() => setCurrentTab('water')}
-            className={`flex flex-col items-center justify-center py-1.5 px-3 rounded-2xl transition cursor-pointer ${
+            className={`flex flex-col items-center justify-center py-1.5 px-4 rounded-2xl transition cursor-pointer ${
               currentTab === 'water'
                 ? 'text-sky-600 dark:text-sky-400 font-black bg-sky-50 dark:bg-sky-950/60'
                 : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
             }`}
           >
             <span className="text-xl">💧</span>
-            <span className="text-[11px] font-bold">Água</span>
-          </button>
-
-          {/* Exercise */}
-          <button
-            onClick={() => setCurrentTab('exercise')}
-            className={`flex flex-col items-center justify-center py-1.5 px-3 rounded-2xl transition cursor-pointer ${
-              currentTab === 'exercise'
-                ? 'text-emerald-600 dark:text-emerald-400 font-black bg-emerald-50 dark:bg-emerald-950/60'
-                : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
-            }`}
-          >
-            <span className="text-xl">🏃</span>
-            <span className="text-[11px] font-bold">Exercício</span>
-          </button>
-
-          {/* Sleep */}
-          <button
-            onClick={() => setCurrentTab('sleep')}
-            className={`flex flex-col items-center justify-center py-1.5 px-3 rounded-2xl transition cursor-pointer ${
-              currentTab === 'sleep'
-                ? 'text-indigo-600 dark:text-indigo-400 font-black bg-indigo-50 dark:bg-indigo-950/60'
-                : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
-            }`}
-          >
-            <span className="text-xl">😴</span>
-            <span className="text-[11px] font-bold">Sono</span>
+            <span className="text-xs font-bold">Água</span>
           </button>
 
           {/* Medicine */}
           <button
             onClick={() => setCurrentTab('medicine')}
-            className={`flex flex-col items-center justify-center py-1.5 px-3 rounded-2xl transition cursor-pointer ${
+            className={`flex flex-col items-center justify-center py-1.5 px-4 rounded-2xl transition cursor-pointer ${
               currentTab === 'medicine'
                 ? 'text-amber-600 dark:text-amber-400 font-black bg-amber-50 dark:bg-amber-950/60'
                 : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
             }`}
           >
             <span className="text-xl">💊</span>
-            <span className="text-[11px] font-bold">Remédios</span>
+            <span className="text-xs font-bold">Remédios</span>
           </button>
         </div>
       </nav>
