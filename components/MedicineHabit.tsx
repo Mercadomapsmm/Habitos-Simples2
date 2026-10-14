@@ -44,6 +44,7 @@ export function MedicineHabit({
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingMedId, setEditingMedId] = useState<string | null>(null);
+  const [historyMedFilter, setHistoryMedFilter] = useState<string>('all');
 
   // Form states
   const [name, setName] = useState('');
@@ -219,6 +220,46 @@ export function MedicineHabit({
         };
       }),
     }));
+  };
+
+  // Toggle medicine doses for a specific day in 7-day history
+  const handleToggleMedicineDay = (medId: string, dateStr: string) => {
+    onUpdate((prev) => {
+      const targetMed = prev.medicines.find((m) => m.id === medId);
+      if (!targetMed) return prev;
+
+      const scheduledTimes = targetMed.times;
+      const isComplete =
+        scheduledTimes.length > 0 &&
+        scheduledTimes.every((t) =>
+          targetMed.history.some((h) => h.date === dateStr && h.time === t)
+        );
+
+      let updatedHistory;
+      if (isComplete) {
+        // Unmark this day for this medicine
+        updatedHistory = targetMed.history.filter((h) => h.date !== dateStr);
+      } else {
+        // Mark all scheduled doses for this day
+        const otherHistory = targetMed.history.filter((h) => h.date !== dateStr);
+        const dayLogs = scheduledTimes.map((t) => ({
+          date: dateStr,
+          time: t,
+          takenAt: t,
+        }));
+        updatedHistory = [...otherHistory, ...dayLogs];
+
+        sounds.playGoalCelebration();
+        triggerVibration([100, 50, 100]);
+      }
+
+      return {
+        ...prev,
+        medicines: prev.medicines.map((m) =>
+          m.id === medId ? { ...m, history: updatedHistory } : m
+        ),
+      };
+    });
   };
 
   // 7-day history list
@@ -422,107 +463,168 @@ export function MedicineHabit({
         )}
       </div>
 
-      {/* 7-Day History Track */}
+      {/* 7-Day History Track - Marked by Medication */}
       {/* CRITICAL: Marcar os dias SOMENTE quando clicar e não acionar outra função */}
-      <div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-3 transition-colors">
-        <div className="flex items-center justify-between">
-          <h4 className="text-xs sm:text-sm font-black text-amber-900 dark:text-amber-400 tracking-wide flex items-center gap-1.5 uppercase">
-            <Calendar className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-            Histórico dos últimos 7 dias:
-          </h4>
-          <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-500">
-            Toque para marcar / desmarcar
-          </span>
-        </div>
+      <div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-4 transition-colors">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 border-b border-slate-100 dark:border-slate-800 pb-3">
+          <div>
+            <h4 className="text-xs sm:text-sm font-black text-amber-900 dark:text-amber-400 tracking-wide flex items-center gap-1.5 uppercase">
+              <Calendar className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+              Histórico dos últimos 7 dias:
+            </h4>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+              Marcado por medicamento • Toque no dia para marcar ou desmarcar
+            </p>
+          </div>
 
-        <div className="grid grid-cols-7 gap-1 sm:gap-2 text-center">
-          {recent7.map((d) => {
-            let totalDoses = 0;
-            let takenCount = 0;
-            medicineState.medicines.forEach((m) => {
-              m.times.forEach((t) => {
-                totalDoses++;
-                const taken = m.history.some(
-                  (h) => h.date === d.dateStr && h.time === t
-                );
-                if (taken) takenCount++;
-              });
-            });
-
-            const isCompleted = totalDoses > 0 ? takenCount >= totalDoses : false;
-
-            return (
+          {/* Quick filter by medicine if more than 1 medicine */}
+          {medicineState.medicines.length > 1 && (
+            <div className="flex items-center gap-1 overflow-x-auto py-1 scrollbar-none">
               <button
-                key={d.dateStr}
                 type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  onUpdate((prev) => {
-                    const anyTaken = prev.medicines.some((m) =>
-                      m.history.some((h) => h.date === d.dateStr)
-                    );
-
-                    if (anyTaken) {
-                      // Unmark this day
-                      return {
-                        ...prev,
-                        medicines: prev.medicines.map((m) => ({
-                          ...m,
-                          history: m.history.filter((h) => h.date !== d.dateStr),
-                        })),
-                      };
-                    } else {
-                      // Mark all doses for this day
-                      return {
-                        ...prev,
-                        medicines: prev.medicines.map((m) => {
-                          const otherHistory = m.history.filter((h) => h.date !== d.dateStr);
-                          const dayLogs = m.times.map((t) => ({
-                            date: d.dateStr,
-                            time: t,
-                            takenAt: t,
-                          }));
-                          return {
-                            ...m,
-                            history: [...otherHistory, ...dayLogs],
-                          };
-                        }),
-                      };
-                    }
-                  });
-                }}
-                className={`p-2 sm:p-2.5 rounded-2xl border transition-all cursor-pointer active:scale-95 flex flex-col items-center justify-between min-h-[82px] select-none ${
-                  isCompleted
-                    ? 'bg-emerald-50/90 dark:bg-emerald-950/60 border-2 border-emerald-400 text-emerald-950 dark:text-emerald-200 shadow-2xs'
-                    : 'bg-slate-50/70 dark:bg-slate-800/60 hover:bg-slate-100/90 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300'
-                } ${d.isToday ? 'ring-2 ring-amber-500 border-2 border-amber-500' : ''}`}
-                title={`Clique para ${isCompleted ? 'desmarcar' : 'marcar'} ${d.dayName} (${d.dateStr})`}
+                onClick={() => setHistoryMedFilter('all')}
+                className={`px-2.5 py-1 rounded-xl text-[11px] font-bold transition cursor-pointer shrink-0 ${
+                  historyMedFilter === 'all'
+                    ? 'bg-amber-500 text-white shadow-2xs'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200'
+                }`}
               >
-                <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500">
-                  {d.dayName}
-                </span>
-
-                <div className="my-1.5">
-                  {isCompleted ? (
-                    <div className="flex items-center justify-center gap-1">
-                      <span className="text-base select-none">💊</span>
-                      <div className="w-5 h-5 rounded-md bg-emerald-500 border-2 border-emerald-600 flex items-center justify-center text-white shadow-xs">
-                        <Check className="w-3.5 h-3.5 stroke-[3]" />
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="w-6 h-6 sm:w-7 sm:h-7 mx-auto rounded-full border-2 border-slate-400/80 dark:border-slate-600 bg-white dark:bg-slate-900" />
-                  )}
-                </div>
-
-                <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
-                  {d.isToday ? 'Hoje' : d.dateStr.slice(8, 10)}
-                </span>
+                Todos ({medicineState.medicines.length})
               </button>
-            );
-          })}
+              {medicineState.medicines.map((m) => (
+                <button
+                  key={m.id}
+                  type="button"
+                  onClick={() => setHistoryMedFilter(m.id)}
+                  className={`px-2.5 py-1 rounded-xl text-[11px] font-bold transition cursor-pointer flex items-center gap-1.5 shrink-0 ${
+                    historyMedFilter === m.id
+                      ? 'bg-amber-500 text-white shadow-2xs'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200'
+                  }`}
+                >
+                  <span
+                    className="w-2 h-2 rounded-full shrink-0"
+                    style={{ backgroundColor: m.color || '#0284c7' }}
+                  />
+                  <span className="truncate max-w-[100px]">{m.name}</span>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
+
+        {medicineState.medicines.length === 0 ? (
+          <div className="p-6 text-center text-slate-400 dark:text-slate-500 text-xs font-medium bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800">
+            Nenhum medicamento cadastrado ainda. Cadastre um remédio acima para acompanhar e marcar o histórico dos últimos 7 dias.
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {medicineState.medicines
+              .filter((med) => historyMedFilter === 'all' || historyMedFilter === med.id)
+              .map((med) => {
+                // Calculate compliance over the 7 days for this medicine
+                const daysCompletedCount = recent7.filter((d) => {
+                  const takenCount = med.times.filter((t) =>
+                    med.history.some((h) => h.date === d.dateStr && h.time === t)
+                  ).length;
+                  return med.times.length > 0 && takenCount >= med.times.length;
+                }).length;
+
+                return (
+                  <div
+                    key={med.id}
+                    className="p-3.5 sm:p-4 rounded-2xl bg-slate-50/60 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-800 space-y-2.5 transition-all"
+                  >
+                    {/* Medicine Header inside history */}
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="w-7 h-7 rounded-lg flex items-center justify-center text-white shrink-0 text-xs shadow-2xs"
+                          style={{ backgroundColor: med.color || '#0284c7' }}
+                        >
+                          <Pill className="w-3.5 h-3.5 fill-white/80" />
+                        </div>
+                        <div>
+                          <h5 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white leading-tight">
+                            {med.name}
+                          </h5>
+                          <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                            {med.dosage} • {med.times.length} {med.times.length === 1 ? 'dose/dia' : 'doses/dia'} ({med.times.join(', ')})
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Compliance Badge */}
+                      <span
+                        className={`text-[10px] sm:text-[11px] font-black px-2.5 py-0.5 sm:py-1 rounded-full border ${
+                          daysCompletedCount === 7
+                            ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700'
+                            : daysCompletedCount > 0
+                            ? 'bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-700'
+                            : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700'
+                        }`}
+                      >
+                        {daysCompletedCount}/7 dias
+                      </span>
+                    </div>
+
+                    {/* 7-Day Grid for THIS specific medicine */}
+                    <div className="grid grid-cols-7 gap-1 sm:gap-2 text-center">
+                      {recent7.map((d) => {
+                        const takenCount = med.times.filter((t) =>
+                          med.history.some((h) => h.date === d.dateStr && h.time === t)
+                        ).length;
+                        const isComplete = med.times.length > 0 && takenCount >= med.times.length;
+                        const isPartial = takenCount > 0 && !isComplete;
+
+                        return (
+                          <button
+                            key={d.dateStr}
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleToggleMedicineDay(med.id, d.dateStr);
+                            }}
+                            className={`p-1.5 sm:p-2 rounded-2xl border transition-all cursor-pointer active:scale-95 flex flex-col items-center justify-between min-h-[76px] select-none ${
+                              isComplete
+                                ? 'bg-emerald-50 dark:bg-emerald-950/70 border-2 border-emerald-500 text-emerald-950 dark:text-emerald-200 shadow-2xs'
+                                : isPartial
+                                ? 'bg-amber-50 dark:bg-amber-950/60 border-2 border-amber-400 text-amber-900 dark:text-amber-200'
+                                : 'bg-white dark:bg-slate-900 hover:bg-slate-100/80 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'
+                            } ${d.isToday ? 'ring-2 ring-amber-500 border-2 border-amber-500' : ''}`}
+                            title={`Clique para ${isComplete ? 'desmarcar' : 'marcar'} ${med.name} em ${d.dayName} (${d.dateStr})`}
+                          >
+                            <span className="text-[10px] sm:text-[11px] font-bold text-slate-400 dark:text-slate-500">
+                              {d.dayName}
+                            </span>
+
+                            <div className="my-1">
+                              {isComplete ? (
+                                <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-lg bg-emerald-500 border-2 border-emerald-600 flex items-center justify-center text-white shadow-xs">
+                                  <Check className="w-3.5 h-3.5 stroke-[3]" />
+                                </div>
+                              ) : isPartial ? (
+                                <div className="px-1.5 py-0.5 rounded-md bg-amber-400 text-amber-950 font-black text-[10px]">
+                                  {takenCount}/{med.times.length}
+                                </div>
+                              ) : (
+                                <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900" />
+                              )}
+                            </div>
+
+                            <span className="text-[10px] sm:text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                              {d.isToday ? 'Hoje' : d.dateStr.slice(8, 10)}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
+        )}
       </div>
 
       {/* Add / Edit Modal */}
