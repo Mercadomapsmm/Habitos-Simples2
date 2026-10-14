@@ -6,7 +6,9 @@ class SoundManager {
   private getContext(): AudioContext | null {
     if (typeof window === 'undefined') return null;
     if (!this.ctx) {
-      const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      const AudioCtx =
+        window.AudioContext ||
+        (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
       if (AudioCtx) {
         this.ctx = new AudioCtx();
       }
@@ -27,7 +29,6 @@ class SoundManager {
       const now = ctx.currentTime;
 
       osc.type = 'sine';
-      // Pitch drop for water plop
       osc.frequency.setValueAtTime(600, now);
       osc.frequency.exponentialRampToValueAtTime(1400, now + 0.08);
       osc.frequency.exponentialRampToValueAtTime(400, now + 0.15);
@@ -42,71 +43,7 @@ class SoundManager {
       osc.start(now);
       osc.stop(now + 0.2);
     } catch {
-      // Audio might be blocked by user interaction policy
-    }
-  }
-
-  // 🏃 Exercise cheerful chime
-  playExerciseChime() {
-    const ctx = this.getContext();
-    if (!ctx) return;
-    try {
-      const notes = [523.25, 659.25, 783.99, 1046.5]; // C5, E5, G5, C6
-      const now = ctx.currentTime;
-
-      notes.forEach((freq, idx) => {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        const start = now + idx * 0.08;
-
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(freq, start);
-
-        gain.gain.setValueAtTime(0, start);
-        gain.gain.linearRampToValueAtTime(0.2, start + 0.02);
-        gain.gain.exponentialRampToValueAtTime(0.001, start + 0.35);
-
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-
-        osc.start(start);
-        osc.stop(start + 0.38);
-      });
-    } catch {
-      // Audio blocked
-    }
-  }
-
-  // 😴 Sleep gentle singing bowl / bell
-  playSleepBowl() {
-    const ctx = this.getContext();
-    if (!ctx) return;
-    try {
-      const now = ctx.currentTime;
-      const osc1 = ctx.createOscillator();
-      const osc2 = ctx.createOscillator();
-      const gain = ctx.createGain();
-
-      osc1.type = 'sine';
-      osc1.frequency.setValueAtTime(432, now); // 432 Hz calming tone
-
-      osc2.type = 'sine';
-      osc2.frequency.setValueAtTime(436, now); // Slight binaural wave
-
-      gain.gain.setValueAtTime(0, now);
-      gain.gain.linearRampToValueAtTime(0.25, now + 0.1);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 1.6);
-
-      osc1.connect(gain);
-      osc2.connect(gain);
-      gain.connect(ctx.destination);
-
-      osc1.start(now);
-      osc2.start(now);
-      osc1.stop(now + 1.7);
-      osc2.stop(now + 1.7);
-    } catch {
-      // Audio blocked
+      // Audio might be blocked by browser autoplay policy
     }
   }
 
@@ -140,13 +77,13 @@ class SoundManager {
     }
   }
 
-  // Success fanfare when goal is completed
+  // 🎉 Success fanfare when goal is completed
   playGoalCelebration() {
     const ctx = this.getContext();
     if (!ctx) return;
     try {
       const now = ctx.currentTime;
-      const chords = [523.25, 659.25, 783.99, 1046.5];
+      const chords = [523.25, 659.25, 783.99, 1046.5]; // C5, E5, G5, C6
       chords.forEach((freq, idx) => {
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();

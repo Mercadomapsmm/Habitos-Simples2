@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react';
-import { AppData, WaterState, ExerciseState, SleepState, MedicineState, ExerciseActivity } from './types';
+import { AppData, WaterState, MedicineState } from './types';
 
 const STORAGE_KEY = 'habitos_simples_v1';
 
@@ -11,123 +11,52 @@ export function getTodayString(): string {
   return `${year}-${month}-${day}`;
 }
 
-export function formatDateBR(dateStr: string): string {
-  if (!dateStr) return '';
-  const parts = dateStr.split('-');
-  if (parts.length !== 3) return dateStr;
-  return `${parts[2]}/${parts[1]}`;
+export interface DayInfo {
+  dateStr: string;
+  label: string;
+  dayShort: string;
+  weekdayName: string;
+  dayNumber: number;
 }
 
-export function getDayNameBR(dayIndex: number): string {
-  const names = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-  return names[dayIndex] || '';
-}
+export function getLast7Days(): DayInfo[] {
+  const days: DayInfo[] = [];
+  const now = new Date();
+  const weekdayNames = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+  const dayShorts = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
-export const defaultActivities: ExerciseActivity[] = [
-  {
-    id: 'act-caminhada',
-    name: 'Caminhada',
-    type: 'caminhada',
-    icon: '🚶‍♂️',
-    selectedDays: [1, 3, 5], // Seg, Qua, Sex
-    reminderTime: '07:00',
-    durationMinutes: 30,
-    enabled: true,
-  },
-  {
-    id: 'act-alongamento',
-    name: 'Alongamento',
-    type: 'alongamento',
-    icon: '🧘‍♀️',
-    selectedDays: [0, 1, 2, 3, 4, 5, 6], // Todos os dias
-    reminderTime: '08:00',
-    durationMinutes: 15,
-    enabled: true,
-  },
-  {
-    id: 'act-academia',
-    name: 'Academia / Treino',
-    type: 'academia',
-    icon: '🏋️‍♂️',
-    selectedDays: [2, 4], // Ter, Qui
-    reminderTime: '18:00',
-    durationMinutes: 45,
-    enabled: true,
-  },
-  {
-    id: 'act-corrida',
-    name: 'Corrida',
-    type: 'corrida',
-    icon: '🏃‍♂️',
-    selectedDays: [6, 0], // Sáb, Dom
-    reminderTime: '07:30',
-    durationMinutes: 30,
-    enabled: false,
-  },
-];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(now);
+    d.setDate(d.getDate() - i);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const dateStr = `${year}-${month}-${day}`;
 
-export function calculateStreak(
-  history: { date: string; completed: boolean }[],
-  todayStr: string
-): number {
-  const completedSet = new Set(
-    history.filter((h) => h.completed).map((h) => h.date)
-  );
+    let label = `${day}/${month}`;
+    if (i === 0) label = 'Hoje';
+    else if (i === 1) label = 'Ontem';
 
-  const parts = todayStr.split('-').map(Number);
-  const checkDate = new Date(parts[0], parts[1] - 1, parts[2]);
-  let streak = 0;
-
-  // If today is completed, count starting from today. If not, start from yesterday
-  if (!completedSet.has(todayStr)) {
-    checkDate.setDate(checkDate.getDate() - 1);
+    days.push({
+      dateStr,
+      label,
+      dayShort: dayShorts[d.getDay()],
+      weekdayName: weekdayNames[d.getDay()],
+      dayNumber: d.getDay(),
+    });
   }
-
-  while (true) {
-    const y = checkDate.getFullYear();
-    const m = String(checkDate.getMonth() + 1).padStart(2, '0');
-    const d = String(checkDate.getDate()).padStart(2, '0');
-    const dateKey = `${y}-${m}-${d}`;
-
-    if (completedSet.has(dateKey)) {
-      streak++;
-      checkDate.setDate(checkDate.getDate() - 1);
-    } else {
-      break;
-    }
-  }
-
-  return streak;
+  return days;
 }
 
 export const defaultInitialData: AppData = {
   water: {
     weightKg: 70,
-    dailyGoalMl: 2450, // 70 * 35 ml
+    dailyGoalMl: 2450, // 70 kg * 35 ml
     consumedMl: 0,
     reminderTimes: ['08:00', '10:30', '13:00', '15:30', '18:00', '20:30'],
     soundEnabled: true,
     vibrationEnabled: true,
     lastUpdatedDate: getTodayString(),
-    history: [],
-  },
-  exercise: {
-    type: 'caminhada',
-    customTypeName: '',
-    selectedDays: [1, 3, 5],
-    reminderTime: '07:00',
-    durationMinutes: 30,
-    streakDays: 0,
-    lastCompletedDate: null,
-    soundEnabled: true,
-    history: [],
-    activities: defaultActivities,
-  },
-  sleep: {
-    targetBedTime: '22:30',
-    targetWakeTime: '06:30',
-    windDownNoticeMinutes: 30,
-    soundEnabled: true,
     history: [],
   },
   medicine: {
@@ -159,9 +88,7 @@ export const defaultInitialData: AppData = {
     userName: '',
     notificationsAllowed: false,
     theme: 'light',
-    dailyEmojis: {},
   },
-  dailyEmojis: {},
 };
 
 let cachedData: AppData = defaultInitialData;
@@ -174,7 +101,7 @@ function emitChange() {
   }
 }
 
-export function subscribeAppData(listener: () => void) {
+export function subscribeAppData(listener: () => void): () => void {
   listeners.push(listener);
   return () => {
     listeners = listeners.filter((l) => l !== listener);
@@ -199,75 +126,68 @@ export function loadAppData(): AppData {
       return cachedData;
     }
 
-    const data: AppData = JSON.parse(raw);
+    const parsed = JSON.parse(raw);
     const today = getTodayString();
+    let needsSave = false;
 
-    // Clean mock history if present
-    const mockDates = new Set(['2026-10-09', '2026-10-10', '2026-10-11']);
-    let hadMocks = false;
+    // Validate and sanitize water state
+    const water: WaterState = {
+      weightKg: typeof parsed.water?.weightKg === 'number' ? parsed.water.weightKg : 70,
+      dailyGoalMl: typeof parsed.water?.dailyGoalMl === 'number' ? parsed.water.dailyGoalMl : 2450,
+      consumedMl: typeof parsed.water?.consumedMl === 'number' ? parsed.water.consumedMl : 0,
+      reminderTimes: Array.isArray(parsed.water?.reminderTimes)
+        ? parsed.water.reminderTimes
+        : defaultInitialData.water.reminderTimes,
+      soundEnabled: parsed.water?.soundEnabled ?? true,
+      vibrationEnabled: parsed.water?.vibrationEnabled ?? true,
+      lastUpdatedDate: parsed.water?.lastUpdatedDate || today,
+      history: Array.isArray(parsed.water?.history) ? parsed.water.history : [],
+    };
 
-    if (data.exercise?.history && data.exercise.history.some((h) => mockDates.has(h.date))) {
-      data.exercise.history = data.exercise.history.filter((h) => !mockDates.has(h.date));
-      data.exercise.streakDays = calculateStreak(data.exercise.history, today);
-      if (data.exercise.lastCompletedDate && mockDates.has(data.exercise.lastCompletedDate)) {
-        data.exercise.lastCompletedDate = null;
-      }
-      hadMocks = true;
-    }
-
-    if (data.sleep?.history && data.sleep.history.some((h) => mockDates.has(h.date))) {
-      data.sleep.history = data.sleep.history.filter((h) => !mockDates.has(h.date));
-      hadMocks = true;
-    }
-
-    if (data.medicine?.medicines) {
-      data.medicine.medicines.forEach((med) => {
-        if (med.history && med.history.some((h) => mockDates.has(h.date))) {
-          med.history = med.history.filter((h) => !mockDates.has(h.date));
-          hadMocks = true;
-        }
-      });
-    }
-
-    if (!data.settings) {
-      data.settings = { notificationsAllowed: false, theme: 'light' };
-      hadMocks = true;
-    } else if (!data.settings.theme) {
-      data.settings.theme = 'light';
-      hadMocks = true;
-    }
-
-    if (!data.exercise.activities || data.exercise.activities.length === 0) {
-      data.exercise.activities = defaultActivities;
-      hadMocks = true;
-    }
-
-    if (!data.dailyEmojis) {
-      data.dailyEmojis = data.settings?.dailyEmojis || {};
-    }
-
-    if (hadMocks) {
-      saveAppData(data);
-    }
-
-    // Check if new day for Water
-    if (data.water.lastUpdatedDate !== today) {
-      if (data.water.consumedMl > 0) {
-        data.water.history = [
-          ...(data.water.history || []).slice(-13),
+    // New day transition for water tracking
+    if (water.lastUpdatedDate !== today) {
+      if (water.consumedMl > 0) {
+        water.history = [
+          ...water.history.slice(-13),
           {
-            date: data.water.lastUpdatedDate,
-            amountMl: data.water.consumedMl,
-            goalMl: data.water.dailyGoalMl,
+            date: water.lastUpdatedDate,
+            amountMl: water.consumedMl,
+            goalMl: water.dailyGoalMl,
           },
         ];
       }
-      data.water.consumedMl = 0;
-      data.water.lastUpdatedDate = today;
-      saveAppData(data);
+      water.consumedMl = 0;
+      water.lastUpdatedDate = today;
+      needsSave = true;
     }
 
-    cachedData = data;
+    // Validate and sanitize medicine state
+    const medicine: MedicineState = {
+      medicines: Array.isArray(parsed.medicine?.medicines)
+        ? parsed.medicine.medicines
+        : defaultInitialData.medicine.medicines,
+      soundEnabled: parsed.medicine?.soundEnabled ?? true,
+    };
+
+    // Sanitize settings
+    const settings = {
+      userName: parsed.settings?.userName || '',
+      notificationsAllowed: parsed.settings?.notificationsAllowed ?? false,
+      theme: parsed.settings?.theme === 'dark' ? ('dark' as const) : ('light' as const),
+    };
+
+    const sanitizedData: AppData = {
+      water,
+      medicine,
+      settings,
+    };
+
+    // Save cleaned schema if migration or new day was detected
+    if (needsSave || 'exercise' in parsed || 'sleep' in parsed || 'dailyEmojis' in parsed) {
+      saveAppData(sanitizedData);
+    }
+
+    cachedData = sanitizedData;
     isLoaded = true;
     return cachedData;
   } catch (err) {
@@ -318,7 +238,11 @@ export function exportDataAsJSON(data: AppData): void {
 
 export function resetAllData(): AppData {
   if (typeof window !== 'undefined') {
-    localStorage.removeItem(STORAGE_KEY);
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch {
+      // ignore
+    }
   }
   cachedData = defaultInitialData;
   saveAppData(defaultInitialData);

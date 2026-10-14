@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
     id: '/',
     name: 'Hábitos Simples',
     short_name: 'Hábitos',
-    description: '4 hábitos essenciais: beber água, se exercitar, dormir bem e tomar remédios. 100% offline e sem complicação.',
+    description: 'Aplicativo gratuito e leve para cuidar de hábitos essenciais: beber água e tomar remédios. 100% offline, fácil e sem cadastro.',
     start_url: '/',
     scope: '/',
     display: 'standalone',

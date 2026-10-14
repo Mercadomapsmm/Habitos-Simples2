@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { ActiveAlert } from '@/lib/notifications';
-import { Bell, Check, X, Clock } from 'lucide-react';
+import { Bell, Check, X } from 'lucide-react';
 
 interface ActiveAlertBannerProps {
   alert: ActiveAlert | null;
@@ -40,6 +40,7 @@ export function ActiveAlertBanner({
             {/* Quick Action Buttons */}
             <div className="flex items-center gap-2 pt-2">
               <button
+                type="button"
                 onClick={() => onConfirmAction(alert)}
                 className="px-3.5 py-1.5 bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white rounded-xl text-xs font-black shadow-xs flex items-center gap-1 transition active:scale-95 cursor-pointer"
               >
@@ -48,6 +49,7 @@ export function ActiveAlertBanner({
               </button>
 
               <button
+                type="button"
                 onClick={onDismiss}
                 className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold border border-slate-700 transition cursor-pointer"
               >
@@ -58,6 +60,7 @@ export function ActiveAlertBanner({
         </div>
 
         <button
+          type="button"
           onClick={onDismiss}
           className="p-1 rounded-lg text-slate-400 hover:text-white transition cursor-pointer"
           title="Fechar aviso"

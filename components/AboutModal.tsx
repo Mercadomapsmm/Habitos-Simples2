@@ -10,7 +10,8 @@ import {
   HardDrive,
   Upload,
   Code2,
-  X,
+  CheckCircle2,
+  AlertCircle,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { Logo } from '@/components/Logo';
@@ -31,6 +32,17 @@ export function AboutModal({
   const [rating, setRating] = useState<number>(5);
   const [ratingSubmitted, setRatingSubmitted] = useState<boolean>(false);
   const [resetConfirm, setResetConfirm] = useState<boolean>(false);
+  const [statusMessage, setStatusMessage] = useState<{
+    type: 'success' | 'error';
+    text: string;
+  } | null>(null);
+
+  const showNotification = (type: 'success' | 'error', text: string) => {
+    setStatusMessage({ type, text });
+    setTimeout(() => {
+      setStatusMessage(null);
+    }, 4000);
+  };
 
   // Rate stars
   const handleRate = (stars: number) => {
@@ -55,15 +67,17 @@ export function AboutModal({
         const parsed = JSON.parse(event.target?.result as string);
         if (parsed.water && parsed.medicine) {
           onRestoreData(parsed);
-          alert('Dados restaurados com sucesso!');
+          showNotification('success', 'Dados restaurados com sucesso a partir do backup!');
         } else {
-          alert('Arquivo de backup inválido.');
+          showNotification('error', 'Arquivo de backup inválido.');
         }
       } catch {
-        alert('Erro ao ler o arquivo JSON.');
+        showNotification('error', 'Erro ao ler o arquivo JSON selecionado.');
       }
     };
     reader.readAsText(file);
+    // Reset input
+    e.target.value = '';
   };
 
   // Reset data
@@ -75,11 +89,29 @@ export function AboutModal({
     const reset = resetAllData();
     onRestoreData(reset);
     setResetConfirm(false);
-    alert('Os dados foram restaurados para o padrão.');
+    showNotification('success', 'Os dados foram restaurados para o padrão original.');
   };
 
   return (
     <div className="space-y-6 pb-12 animate-fade-in max-w-xl mx-auto">
+      {/* Inline Feedback Banner */}
+      {statusMessage && (
+        <div
+          className={`p-3.5 rounded-2xl border flex items-center gap-2.5 text-xs font-bold transition-all shadow-sm ${
+            statusMessage.type === 'success'
+              ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200'
+              : 'bg-rose-50 dark:bg-rose-950/60 border-rose-300 dark:border-rose-800 text-rose-800 dark:text-rose-200'
+          }`}
+        >
+          {statusMessage.type === 'success' ? (
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+          ) : (
+            <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
+          )}
+          <span>{statusMessage.text}</span>
+        </div>
+      )}
+
       {/* Brand Hero */}
       <div className="text-center p-6 bg-gradient-to-b from-sky-50 to-white dark:from-slate-900 dark:to-slate-900/90 rounded-3xl border-2 border-sky-100 dark:border-slate-800 shadow-xs space-y-3 transition-colors">
         <Logo className="w-16 h-16 mx-auto" />
@@ -139,6 +171,7 @@ export function AboutModal({
       {/* Tabs */}
       <div className="flex p-1 bg-slate-100 dark:bg-slate-800 rounded-2xl text-xs font-bold text-slate-600 dark:text-slate-300">
         <button
+          type="button"
           onClick={() => setActiveTab('sobre')}
           className={`flex-1 py-2.5 rounded-xl transition cursor-pointer ${
             activeTab === 'sobre'
@@ -149,6 +182,7 @@ export function AboutModal({
           ⭐ Avaliar & Sobre
         </button>
         <button
+          type="button"
           onClick={() => setActiveTab('codigo')}
           className={`flex-1 py-2.5 rounded-xl transition cursor-pointer ${
             activeTab === 'codigo'
@@ -159,6 +193,7 @@ export function AboutModal({
           🤖 Guia Android / APK
         </button>
         <button
+          type="button"
           onClick={() => setActiveTab('backup')}
           className={`flex-1 py-2.5 rounded-xl transition cursor-pointer ${
             activeTab === 'backup'
@@ -170,7 +205,7 @@ export function AboutModal({
         </button>
       </div>
 
-      {/* TAB 2: Guia Android / APK & Código */}
+      {/* TAB 1: Guia Android / APK & Código */}
       {activeTab === 'codigo' && (
         <div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border-2 border-slate-100 dark:border-slate-800 shadow-xs space-y-4 animate-fade-in transition-colors">
           <div>
@@ -229,7 +264,7 @@ export function AboutModal({
         </div>
       )}
 
-      {/* TAB 3: Avaliar & Sobre */}
+      {/* TAB 2: Avaliar & Sobre */}
       {activeTab === 'sobre' && (
         <div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border-2 border-slate-100 dark:border-slate-800 shadow-xs space-y-5 animate-fade-in transition-colors">
           <div>
@@ -291,7 +326,7 @@ export function AboutModal({
         </div>
       )}
 
-      {/* TAB 4: Meus Dados / Backup */}
+      {/* TAB 3: Meus Dados / Backup */}
       {activeTab === 'backup' && (
         <div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border-2 border-slate-100 dark:border-slate-800 shadow-xs space-y-4 animate-fade-in transition-colors">
           <div>

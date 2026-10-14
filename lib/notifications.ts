@@ -29,7 +29,7 @@ export function hasNotificationPermission(): boolean {
   return Notification.permission === 'granted';
 }
 
-export function sendBrowserNotification(title: string, body: string, icon = '/icon.svg') {
+export function sendBrowserNotification(title: string, body: string, icon = '/icon.svg'): void {
   if (typeof window === 'undefined' || !('Notification' in window)) return;
   if (Notification.permission === 'granted') {
     try {
@@ -67,10 +67,13 @@ export function checkActiveAlerts(data: AppData, todayStr: string): ActiveAlert[
   const currentHour = String(now.getHours()).padStart(2, '0');
   const currentMinute = String(now.getMinutes()).padStart(2, '0');
   const currentTime = `${currentHour}:${currentMinute}`;
-  const currentDayOfWeek = now.getDay(); // 0 to 6
+  const currentDayOfWeek = now.getDay(); // 0 = Domingo, 1 = Segunda, ...
 
-  // 1. Water
-  if (data.water.reminderTimes.includes(currentTime) && data.water.consumedMl < data.water.dailyGoalMl) {
+  // 1. Water check
+  if (
+    data.water.reminderTimes.includes(currentTime) &&
+    data.water.consumedMl < data.water.dailyGoalMl
+  ) {
     alerts.push({
       id: `water-${currentTime}`,
       type: 'water',
@@ -82,10 +85,18 @@ export function checkActiveAlerts(data: AppData, todayStr: string): ActiveAlert[
 
   // 2. Medicine check
   data.medicine.medicines.forEach((med: Medicine) => {
+    // If set to specific days, verify today is scheduled
+    if (
+      med.frequency === 'specific_days' &&
+      med.specificDays &&
+      med.specificDays.length > 0 &&
+      !med.specificDays.includes(currentDayOfWeek)
+    ) {
+      return;
+    }
+
     med.times.forEach((t) => {
-      // Check if matches current time
       if (t === currentTime) {
-        // Check if already taken today at this time
         const alreadyTaken = med.history.some(
           (h) => h.date === todayStr && h.time === t
         );
@@ -107,7 +118,7 @@ export function checkActiveAlerts(data: AppData, todayStr: string): ActiveAlert[
 }
 
 // Trigger alert sound & vibration
-export function triggerAlertEffects(type: 'water' | 'medicine') {
+export function triggerAlertEffects(type: 'water' | 'medicine'): void {
   if (type === 'water') {
     sounds.playWaterDrop();
     triggerVibration([100, 80, 100]);

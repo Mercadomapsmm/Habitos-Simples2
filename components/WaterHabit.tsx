@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { WaterState } from '@/lib/types';
+import { getTodayString, getLast7Days } from '@/lib/storage';
 import { sounds, triggerVibration } from '@/lib/sound';
 import confetti from 'canvas-confetti';
 import {
@@ -14,6 +15,8 @@ import {
   Award,
   ChevronDown,
   Calculator,
+  Calendar,
+  CheckCircle2,
 } from 'lucide-react';
 
 interface WaterHabitProps {
@@ -233,6 +236,118 @@ export function WaterHabit({ waterState, onUpdate }: WaterHabitProps) {
           </div>
         )}
       </div>
+
+      {/* Histórico dos Últimos 7 Dias de Água */}
+      {(() => {
+        const todayStr = getTodayString();
+        const last7Days = getLast7Days();
+        const chronologicalDays = [...last7Days].reverse(); // from 6 days ago up to Today
+
+        let daysMetGoal = 0;
+        const daysData = chronologicalDays.map((day) => {
+          const isToday = day.dateStr === todayStr;
+          let amount = 0;
+          let goal = waterState.dailyGoalMl;
+
+          if (isToday) {
+            amount = waterState.consumedMl;
+            goal = waterState.dailyGoalMl;
+          } else {
+            const entry = waterState.history.find((h) => h.date === day.dateStr);
+            if (entry) {
+              amount = entry.amountMl;
+              goal = entry.goalMl || waterState.dailyGoalMl;
+            }
+          }
+
+          const percent = Math.min(100, Math.round((amount / Math.max(1, goal)) * 100));
+          const isGoalMet = amount >= goal;
+          if (isGoalMet) daysMetGoal++;
+
+          return {
+            ...day,
+            isToday,
+            amount,
+            goal,
+            percent,
+            isGoalMet,
+          };
+        });
+
+        return (
+          <div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border-2 border-slate-100 dark:border-slate-800 shadow-xs space-y-4 transition-colors">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-sky-100 dark:bg-sky-950/60 flex items-center justify-center text-sky-600 dark:text-sky-400">
+                  <Calendar className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-black text-slate-800 dark:text-white">
+                    Histórico dos Últimos 7 Dias
+                  </h4>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                    Sua constância de hidratação dia a dia
+                  </p>
+                </div>
+              </div>
+
+              <span className="text-xs font-black text-sky-800 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/60 px-3 py-1 rounded-full border border-sky-200 dark:border-sky-800">
+                {daysMetGoal} de 7 metas batidas 🎉
+              </span>
+            </div>
+
+            {/* Visual 7-Day Bars */}
+            <div className="grid grid-cols-7 gap-1.5 sm:gap-2 pt-1">
+              {daysData.map((d) => (
+                <div
+                  key={d.dateStr}
+                  className={`p-2 rounded-2xl border flex flex-col items-center justify-between text-center transition ${
+                    d.isToday
+                      ? 'border-sky-400 bg-sky-50/70 dark:bg-sky-950/50 shadow-xs ring-1 ring-sky-300'
+                      : d.isGoalMet
+                      ? 'border-emerald-300 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-950/30'
+                      : 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40'
+                  }`}
+                  title={`${d.label} (${d.weekdayName}): ${d.amount.toLocaleString('pt-BR')} ml de ${d.goal.toLocaleString('pt-BR')} ml (${d.percent}%)`}
+                >
+                  <span className="text-[10px] font-bold uppercase text-slate-400 dark:text-slate-500 mb-1">
+                    {d.dayShort}
+                  </span>
+
+                  {/* Vertical mini progress bar */}
+                  <div className="w-full h-16 bg-white dark:bg-slate-800 rounded-xl overflow-hidden p-0.5 flex flex-col justify-end border border-slate-200 dark:border-slate-700 mb-1">
+                    <div
+                      className={`w-full rounded-lg transition-all duration-500 ${
+                        d.isGoalMet
+                          ? 'bg-gradient-to-t from-emerald-500 to-teal-400'
+                          : 'bg-gradient-to-t from-sky-500 to-sky-400'
+                      }`}
+                      style={{ height: `${Math.max(6, d.percent)}%` }}
+                    />
+                  </div>
+
+                  {/* Icon or indicator */}
+                  <div className="text-[10px] font-black leading-tight">
+                    {d.isGoalMet ? (
+                      <span className="text-emerald-600 dark:text-emerald-400">✓ Meta</span>
+                    ) : (
+                      <span className="text-slate-600 dark:text-slate-400">{d.percent}%</span>
+                    )}
+                  </div>
+
+                  <span
+                    className={`text-[10px] font-bold mt-0.5 ${
+                      d.isToday ? 'text-sky-700 dark:text-sky-400 font-black underline' : 'text-slate-500 dark:text-slate-400'
+                    }`}
+                  >
+                    {d.label}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Settings / Weight & Reminders Section */}
       <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden transition-colors">

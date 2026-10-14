@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { HabitTab, AppData } from '@/lib/types';
-import { getTodayString, getDayNameBR, formatDateBR } from '@/lib/storage';
+import { getTodayString } from '@/lib/storage';
 import {
   Droplet,
   Pill,
@@ -14,38 +14,20 @@ import {
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { sounds, triggerVibration } from '@/lib/sound';
+import { DailyMotivationCard } from '@/components/DailyMotivationCard';
 
 interface HomeScreenProps {
   data: AppData;
   onSelectTab: (tab: HabitTab) => void;
   onQuickDrinkWater: (amountMl: number) => void;
-  onUpdateDailyEmoji?: (date: string, emoji: string | null) => void;
 }
-
-const quickDailyEmojis = [
-  // Hidratação & Saúde
-  { emoji: '💧', label: 'Hidratado' },
-  { emoji: '💊', label: 'Remédios' },
-  { emoji: '🌟', label: 'Dia Nota 10' },
-  { emoji: '😊', label: 'Bem-estar' },
-  { emoji: '❤️', label: 'Saúde' },
-  { emoji: '🎯', label: 'Foco' },
-  { emoji: '🥗', label: 'Alimentação' },
-  { emoji: '🌿', label: 'Equilíbrio' },
-  { emoji: '☀️', label: 'Disposição' },
-  { emoji: '🏆', label: 'Meta Batida' },
-  { emoji: '🥳', label: 'Comemoração' },
-  { emoji: '✨', label: 'Brilho' },
-];
 
 export function HomeScreen({
   data,
   onSelectTab,
   onQuickDrinkWater,
-  onUpdateDailyEmoji,
 }: HomeScreenProps) {
   const todayStr = getTodayString();
-  const [selectedHomeDay, setSelectedHomeDay] = useState<string | null>(null);
 
   // Water calculation
   const waterPercent = Math.min(
@@ -57,7 +39,19 @@ export function HomeScreen({
   // Medicine status: check how many doses left today
   let totalDosesToday = 0;
   let takenDosesToday = 0;
+  const currentDayOfWeek = new Date().getDay();
+
   data.medicine.medicines.forEach((med) => {
+    // Check if scheduled for current day of week
+    if (
+      med.frequency === 'specific_days' &&
+      med.specificDays &&
+      med.specificDays.length > 0 &&
+      !med.specificDays.includes(currentDayOfWeek)
+    ) {
+      return;
+    }
+
     med.times.forEach((t) => {
       totalDosesToday++;
       const taken = med.history.some((h) => h.date === todayStr && h.time === t);
@@ -97,29 +91,6 @@ export function HomeScreen({
       sounds.playGoalCelebration();
     }
   };
-
-  // Generate 7-day list for Home Screen emoji tracker
-  const getRecent7Days = () => {
-    const list = [];
-    const now = new Date();
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date();
-      d.setDate(now.getDate() - i);
-      const dateStr = d.toISOString().split('T')[0];
-      const dayName = getDayNameBR(d.getDay());
-      const emoji = data.dailyEmojis?.[dateStr];
-
-      list.push({
-        dateStr,
-        dayName,
-        emoji,
-        isToday: dateStr === todayStr,
-      });
-    }
-    return list;
-  };
-
-  const recentDays = getRecent7Days();
 
   return (
     <div className="space-y-6 pb-12 animate-fade-in">
@@ -162,145 +133,8 @@ export function HomeScreen({
         </div>
       </div>
 
-      {/* 🌟 7-Day Varied Emoji Tracker on HomeScreen */}
-      <div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border-2 border-slate-100 dark:border-slate-800 shadow-xs space-y-3 transition-colors">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-xl">🎨</span>
-            <h3 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-wider">
-              Seus 7 Dias com Emojis
-            </h3>
-          </div>
-          <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-500">
-            Toque para escolher o emoji
-          </span>
-        </div>
-
-        <p className="text-xs text-slate-500 dark:text-slate-400">
-          Marque emojis variados a cada dia para registrar como você está se cuidando:
-        </p>
-
-        {/* 7 Days Row */}
-        <div className="grid grid-cols-7 gap-1 sm:gap-2 text-center pt-1">
-          {recentDays.map((d) => {
-            const isSelected = selectedHomeDay === d.dateStr;
-            const hasEmoji = !!d.emoji;
-
-            return (
-              <button
-                key={d.dateStr}
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setSelectedHomeDay((curr) => (curr === d.dateStr ? null : d.dateStr));
-                }}
-                className={`p-2 rounded-2xl border transition-all cursor-pointer active:scale-95 flex flex-col items-center justify-between min-h-[84px] select-none ${
-                  isSelected
-                    ? 'ring-2 ring-sky-500 border-2 border-sky-500 bg-sky-50 dark:bg-sky-950/70 shadow-sm'
-                    : hasEmoji
-                    ? 'bg-emerald-50/80 dark:bg-emerald-950/50 border-2 border-emerald-300 dark:border-emerald-700 text-slate-800 dark:text-white shadow-2xs'
-                    : 'bg-slate-50/70 dark:bg-slate-800/60 hover:bg-slate-100/90 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300'
-                } ${d.isToday && !isSelected ? 'border-dashed border-sky-400' : ''}`}
-                title={`Toque para marcar emoji em ${d.dayName} (${d.dateStr})`}
-              >
-                <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500">
-                  {d.dayName}
-                </span>
-
-                <div className="my-1.5">
-                  {hasEmoji ? (
-                    <div className="w-8 h-8 rounded-xl bg-white dark:bg-slate-800 border border-emerald-200 dark:border-emerald-700 flex items-center justify-center text-xl shadow-2xs select-none">
-                      {d.emoji}
-                    </div>
-                  ) : (
-                    <div className="w-8 h-8 rounded-full border-2 border-dashed border-slate-300 dark:border-slate-600 bg-white/60 dark:bg-slate-900/60 flex items-center justify-center text-xs text-slate-400">
-                      +
-                    </div>
-                  )}
-                </div>
-
-                <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
-                  {d.isToday ? 'Hoje' : d.dateStr.slice(8, 10)}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Varied Emoji Selector for Selected Day */}
-        {selectedHomeDay && (
-          <div className="p-3.5 rounded-2xl bg-sky-50/70 dark:bg-slate-800/90 border border-sky-200 dark:border-sky-800 space-y-2.5 animate-fade-in mt-2">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-black text-slate-800 dark:text-white flex items-center gap-1.5">
-                <span>🎨</span> Escolha o emoji para {formatDateBR(selectedHomeDay)}:
-              </span>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    if (onUpdateDailyEmoji) {
-                      onUpdateDailyEmoji(selectedHomeDay, null);
-                    }
-                    setSelectedHomeDay(null);
-                  }}
-                  className="text-[11px] font-bold text-rose-600 dark:text-rose-400 hover:underline cursor-pointer"
-                >
-                  Desmarcar dia
-                </button>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setSelectedHomeDay(null);
-                  }}
-                  className="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer font-bold px-1"
-                >
-                  ✕
-                </button>
-              </div>
-            </div>
-
-            {/* Quick Palette of Varied Emojis */}
-            <div className="grid grid-cols-6 sm:grid-cols-12 gap-1.5 sm:gap-2">
-              {quickDailyEmojis.map((item) => {
-                const currentEmoji = data.dailyEmojis?.[selectedHomeDay];
-                const isCurrent = currentEmoji === item.emoji;
-
-                return (
-                  <button
-                    key={item.emoji}
-                    type="button"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      if (onUpdateDailyEmoji) {
-                        onUpdateDailyEmoji(selectedHomeDay, item.emoji);
-                      }
-                      sounds.playWaterDrop();
-                      triggerVibration([80, 40]);
-                    }}
-                    className={`p-1.5 sm:p-2 rounded-xl text-lg sm:text-2xl transition active:scale-95 cursor-pointer flex flex-col items-center justify-center ${
-                      isCurrent
-                        ? 'bg-sky-500 text-white shadow-xs ring-2 ring-sky-400 scale-105'
-                        : 'bg-white dark:bg-slate-700/80 hover:bg-sky-50 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600'
-                    }`}
-                    title={item.label}
-                  >
-                    <span>{item.emoji}</span>
-                  </button>
-                );
-              })}
-            </div>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 text-center">
-              Toque em qualquer emoji para marcar o dia com salvamento automático!
-            </p>
-          </div>
-        )}
-      </div>
+      {/* 🌟 Frase de Motivação Todos os Dias */}
+      <DailyMotivationCard />
 
       {/* 2 Big Cards - 1 Tap Away (Water and Medicine) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -357,6 +191,7 @@ export function HomeScreen({
           {/* Quick Action Button */}
           <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
             <button
+              type="button"
               onClick={handleQuickDrink}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-sky-500 hover:bg-sky-600 active:bg-sky-700 text-white text-xs font-bold rounded-xl shadow-xs transition active:scale-95 cursor-pointer"
               title="Registrar um copo d'água agora"

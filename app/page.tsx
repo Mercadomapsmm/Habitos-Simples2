@@ -94,28 +94,6 @@ export default function Page() {
     }));
   };
 
-  // Update varied emoji for any day from home screen with automatic saving
-  const handleUpdateDailyEmoji = (date: string, emoji: string | null) => {
-    updateData((prev) => {
-      const current = { ...(prev.dailyEmojis || {}) };
-
-      if (!emoji) {
-        delete current[date];
-      } else {
-        current[date] = emoji;
-      }
-
-      return {
-        ...prev,
-        dailyEmojis: current,
-        settings: {
-          ...prev.settings,
-          dailyEmojis: current,
-        },
-      };
-    });
-  };
-
   // Confirm active alert action
   const handleConfirmAlertAction = (alert: ActiveAlert) => {
     const todayStr = getTodayString();
@@ -200,7 +178,7 @@ export default function Page() {
 
       {/* Offline Toast Indicator */}
       {!isOnline && (
-        <div className="fixed bottom-4 left-4 z-50 flex items-center gap-2 rounded-xl bg-slate-800 text-white px-3.5 py-2 text-xs font-bold shadow-lg border border-slate-700">
+        <div className="fixed bottom-18 left-4 z-50 flex items-center gap-2 rounded-xl bg-slate-800 text-white px-3.5 py-2 text-xs font-bold shadow-lg border border-slate-700">
           <WifiOff className="w-4 h-4 text-amber-400" />
           <span>Modo Offline: tudo salvo no aparelho.</span>
         </div>
@@ -221,7 +199,6 @@ export default function Page() {
                 data={data}
                 onSelectTab={setCurrentTab}
                 onQuickDrinkWater={handleQuickDrinkWater}
-                onUpdateDailyEmoji={handleUpdateDailyEmoji}
               />
             )}
 
@@ -260,6 +237,7 @@ export default function Page() {
         <div className="max-w-md mx-auto px-4 py-2 flex items-center justify-around gap-2">
           {/* Home */}
           <button
+            type="button"
             onClick={() => setCurrentTab('home')}
             className={`flex flex-col items-center justify-center py-1.5 px-4 rounded-2xl transition cursor-pointer ${
               currentTab === 'home'
@@ -273,6 +251,7 @@ export default function Page() {
 
           {/* Water */}
           <button
+            type="button"
             onClick={() => setCurrentTab('water')}
             className={`flex flex-col items-center justify-center py-1.5 px-4 rounded-2xl transition cursor-pointer ${
               currentTab === 'water'
@@ -286,6 +265,7 @@ export default function Page() {
 
           {/* Medicine */}
           <button
+            type="button"
             onClick={() => setCurrentTab('medicine')}
             className={`flex flex-col items-center justify-center py-1.5 px-4 rounded-2xl transition cursor-pointer ${
               currentTab === 'medicine'
