@@ -1,9 +1,8 @@
 'use client';
 
 import React from 'react';
-import { ArrowLeft, Bell, BellOff, Info, Download, Sparkles, Sun, Moon } from 'lucide-react';
+import { ArrowLeft, Bell, BellOff, Info, Sun, Moon } from 'lucide-react';
 import { HabitTab } from '@/lib/types';
-import { usePWAInstall } from '@/hooks/use-pwa-install';
 import { requestNotificationPermission } from '@/lib/notifications';
 import { Logo } from '@/components/Logo';
 
@@ -24,7 +23,6 @@ export function Header({
   theme,
   onToggleTheme,
 }: HeaderProps) {
-  const { isInstallable, install, isIOS } = usePWAInstall();
 
   const handleNotificationClick = async () => {
     if (!notificationsEnabled) {
@@ -46,7 +44,7 @@ export function Header({
       case 'medicine':
         return { title: 'Lembrete de Remédio', subtitle: 'Doses e Horários Certos', icon: '💊' };
       case 'about':
-        return { title: 'Sobre o App & Instalação', subtitle: 'Versão 1.0.0 • 100% Offline', icon: 'ℹ️' };
+        return { title: 'Sobre o App', subtitle: 'Versão 1.0.0 • 100% Offline', icon: 'ℹ️' };
       default:
         return { title: 'Hábitos Simples', subtitle: 'Cuidado diário sem complicação', icon: null };
     }
@@ -93,31 +91,8 @@ export function Header({
           )}
         </div>
 
-        {/* Right Actions: Theme Toggle, Install Button, Notifications, About */}
+        {/* Right Actions: Theme Toggle, Notifications, About */}
         <div className="flex items-center gap-2">
-          {/* PWA Install Button */}
-          {isInstallable && (
-            <button
-              onClick={install}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-sky-600 to-teal-600 text-white rounded-xl text-xs font-bold shadow-xs hover:from-sky-700 hover:to-teal-700 transition active:scale-95"
-              title="Instalar no celular"
-            >
-              <Download className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Instalar App</span>
-              <span className="sm:hidden">Instalar</span>
-            </button>
-          )}
-
-          {isIOS && !isInstallable && (
-            <button
-              onClick={() => onSelectTab('about')}
-              className="flex items-center gap-1 px-2.5 py-1.5 bg-sky-50 dark:bg-sky-950/50 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800 rounded-xl text-xs font-semibold hover:bg-sky-100 transition active:scale-95"
-              title="Como instalar no iPhone"
-            >
-              <Download className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Instalar</span>
-            </button>
-          )}
 
           {/* Duas opções para a cor da tela: Branco e Dark */}
           <div
@@ -184,7 +159,7 @@ export function Header({
                 ? 'bg-sky-100 dark:bg-sky-950/60 border-sky-300 dark:border-sky-700 text-sky-800 dark:text-sky-300'
                 : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100'
             }`}
-            title="Sobre o app e guia de instalação"
+            title="Sobre o app"
             aria-label="Sobre o app"
           >
             <Info className="w-5 h-5" />

@@ -3,12 +3,10 @@
 import React, { useState } from 'react';
 import { AppData } from '@/lib/types';
 import { exportDataAsJSON, resetAllData } from '@/lib/storage';
-import { usePWAInstall } from '@/hooks/use-pwa-install';
 import {
   ShieldCheck,
   Star,
   Download,
-  Smartphone,
   HardDrive,
   Upload,
   Code2,
@@ -29,8 +27,7 @@ export function AboutModal({
   onRestoreData,
   onSetTheme,
 }: AboutModalProps) {
-  const { isInstallable, install } = usePWAInstall();
-  const [activeTab, setActiveTab] = useState<'instalar' | 'codigo' | 'sobre' | 'backup'>('instalar');
+  const [activeTab, setActiveTab] = useState<'sobre' | 'codigo' | 'backup'>('sobre');
   const [rating, setRating] = useState<number>(5);
   const [ratingSubmitted, setRatingSubmitted] = useState<boolean>(false);
   const [resetConfirm, setResetConfirm] = useState<boolean>(false);
@@ -56,7 +53,7 @@ export function AboutModal({
     reader.onload = (event) => {
       try {
         const parsed = JSON.parse(event.target?.result as string);
-        if (parsed.water && parsed.exercise && parsed.sleep && parsed.medicine) {
+        if (parsed.water && parsed.medicine) {
           onRestoreData(parsed);
           alert('Dados restaurados com sucesso!');
         } else {
@@ -96,7 +93,7 @@ export function AboutModal({
           </div>
         </div>
         <p className="text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-300 max-w-md mx-auto">
-          Criado para pessoas comuns manterem água, exercício, sono e remédios em dia, sem login, sem complicação e sem anúncios.
+          Criado para pessoas comuns manterem água e remédios em dia, sem login, sem complicação e sem anúncios.
         </p>
       </div>
 
@@ -142,14 +139,14 @@ export function AboutModal({
       {/* Tabs */}
       <div className="flex p-1 bg-slate-100 dark:bg-slate-800 rounded-2xl text-xs font-bold text-slate-600 dark:text-slate-300">
         <button
-          onClick={() => setActiveTab('instalar')}
+          onClick={() => setActiveTab('sobre')}
           className={`flex-1 py-2.5 rounded-xl transition cursor-pointer ${
-            activeTab === 'instalar'
+            activeTab === 'sobre'
               ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs'
               : 'hover:text-slate-900 dark:hover:text-white'
           }`}
         >
-          📱 Instalar no Celular
+          ⭐ Avaliar & Sobre
         </button>
         <button
           onClick={() => setActiveTab('codigo')}
@@ -162,16 +159,6 @@ export function AboutModal({
           🤖 Guia Android / APK
         </button>
         <button
-          onClick={() => setActiveTab('sobre')}
-          className={`flex-1 py-2.5 rounded-xl transition cursor-pointer ${
-            activeTab === 'sobre'
-              ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs'
-              : 'hover:text-slate-900 dark:hover:text-white'
-          }`}
-        >
-          ⭐ Avaliar & Sobre
-        </button>
-        <button
           onClick={() => setActiveTab('backup')}
           className={`flex-1 py-2.5 rounded-xl transition cursor-pointer ${
             activeTab === 'backup'
@@ -182,73 +169,6 @@ export function AboutModal({
           💾 Meus Dados
         </button>
       </div>
-
-      {/* TAB 1: Instalar no Celular */}
-      {activeTab === 'instalar' && (
-        <div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border-2 border-slate-100 dark:border-slate-800 shadow-xs space-y-5 animate-fade-in transition-colors">
-          <div>
-            <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
-              <Smartphone className="w-5 h-5 text-sky-600 dark:text-sky-400" />
-              Como Usar Direto na Tela do Seu Celular (Passo a Passo)
-            </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              O aplicativo foi desenvolvido como PWA (Progressive Web App). Você pode colocá-lo no celular em 10 segundos sem precisar baixar nada pesado da loja.
-            </p>
-          </div>
-
-          {/* Android Chrome Guide */}
-          <div className="p-4 rounded-2xl bg-sky-50/80 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-800 space-y-2.5">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-black uppercase text-sky-900 dark:text-sky-200 flex items-center gap-1.5">
-                <span>🤖</span> No celular Android (Google Chrome):
-              </span>
-              {isInstallable && (
-                <button
-                  onClick={install}
-                  className="px-3 py-1 bg-sky-600 text-white rounded-xl text-xs font-black hover:bg-sky-700 transition cursor-pointer flex items-center gap-1"
-                >
-                  <Download className="w-3.5 h-3.5" />
-                  Instalar Agora
-                </button>
-              )}
-            </div>
-
-            <ol className="text-xs text-slate-700 dark:text-slate-300 space-y-2 list-decimal list-inside font-medium">
-              <li>
-                Abra este aplicativo no <strong>Google Chrome</strong> do seu celular.
-              </li>
-              <li>
-                Toque no ícone de <strong>3 pontinhos (⋮)</strong> no canto superior direito do Chrome.
-              </li>
-              <li>
-                Selecione a opção <strong>&quot;Instalar aplicativo&quot;</strong> ou <strong>&quot;Adicionar à tela inicial&quot;</strong>.
-              </li>
-              <li>
-                Pronto! O ícone de <strong>Hábitos Simples</strong> vai aparecer na tela do seu aparelho como um aplicativo normal, funcionando mesmo sem internet.
-              </li>
-            </ol>
-          </div>
-
-          {/* iOS Safari Guide */}
-          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-2">
-            <span className="text-xs font-black uppercase text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-              <span>🍏</span> No iPhone / iPad (Safari):
-            </span>
-            <ol className="text-xs text-slate-700 dark:text-slate-300 space-y-1.5 list-decimal list-inside font-medium">
-              <li>Abra esta página no navegador <strong>Safari</strong>.</li>
-              <li>Toque no botão de <strong>Compartilhar (o ícone de quadrado com seta para cima ⬆️)</strong>.</li>
-              <li>Role um pouco para baixo e toque em <strong>&quot;Adicionar à Tela de Início&quot;</strong>.</li>
-              <li>Toque em <strong>&quot;Adicionar&quot;</strong> no canto superior direito.</li>
-            </ol>
-          </div>
-
-          {/* Offline benefit */}
-          <div className="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200 text-xs font-bold flex items-center gap-2">
-            <ShieldCheck className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-            <span>Todos os dados ficam 100% salvos no seu próprio aparelho! Zero consumo desnecessário de bateria.</span>
-          </div>
-        </div>
-      )}
 
       {/* TAB 2: Guia Android / APK & Código */}
       {activeTab === 'codigo' && (

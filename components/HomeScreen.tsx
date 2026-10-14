@@ -11,7 +11,6 @@ import {
   Plus,
   Sparkles,
   ShieldCheck,
-  Smartphone,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { sounds, triggerVibration } from '@/lib/sound';
@@ -415,29 +414,6 @@ export function HomeScreen({
             </span>
           </div>
         </div>
-      </div>
-
-      {/* Helpful Guidance Footer Card */}
-      <div className="p-4 rounded-2xl bg-slate-100/90 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-700 dark:text-slate-300 shrink-0">
-            <Smartphone className="w-5 h-5 text-sky-600 dark:text-sky-400" />
-          </div>
-          <div>
-            <h4 className="text-sm font-bold text-slate-800 dark:text-white leading-tight">
-              Instale na tela inicial do seu celular
-            </h4>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              Fica igual a um aplicativo da Google Play / App Store, sem gastar memória.
-            </p>
-          </div>
-        </div>
-        <button
-          onClick={() => onSelectTab('about')}
-          className="shrink-0 px-3 py-2 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 shadow-2xs active:scale-95 transition cursor-pointer"
-        >
-          Ver como
-        </button>
       </div>
     </div>
   );
